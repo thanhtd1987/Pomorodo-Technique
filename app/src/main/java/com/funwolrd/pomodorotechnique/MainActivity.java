@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private ProcessStatus mProcessStatus = ProcessStatus.STOPPED;
-    private Pomodoro mCurrentStep = Pomodoro.WORKING;
+    private Pomodoro mCurrentStep = Pomodoro.SHORT_BREAK;
     private int mPomodoroLapCount = 0;
     private boolean isDelayForNextStep = false;
 
@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ImageView ivTaskList;
     private CountDownTimer countDownTimer;
     private TextView btnStart;
+    private TextView tvCount, tvNextStep;
 
 
     @Override
@@ -72,6 +73,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ivNextTask = findViewById(R.id.iv_next_task);
         ivTaskList = findViewById(R.id.iv_task_list);
         btnStart = findViewById(R.id.btn_start);
+        tvCount = findViewById(R.id.tv_count);
+        tvNextStep = findViewById(R.id.tv_next_step);
+
+        updateView(mCurrentStep.name());
     }
 
     private void initListeners() {
@@ -100,40 +105,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void reset() {
-        stopCountDownTimer();
-        startCountDownTimer();
+    private void updateView(String nextStep) {
+        tvCount.setText(String.format(getString(R.string.text_working_time), mPomodoroLapCount));
+        tvNextStep.setText(String.format(getString(R.string.text_next_step), nextStep));
     }
-
 
     /**
      * method to start and stop count down timer
      */
     private void runPomodoroProcess() {
         if (mProcessStatus == ProcessStatus.STOPPED) {
-            setTimerValues();
-            setProgressBarValues();
-
-
+            doNextStep();
             // changing the timer status to started
             mProcessStatus = ProcessStatus.STARTED;
             // call to start the count down timer
             startCountDownTimer();
-
+            btnStart.setText("STOP");
         } else {
             etTaskName.setEnabled(true);
             // changing the timer status to stopped
             mProcessStatus = ProcessStatus.STOPPED;
             stopCountDownTimer();
-
+            btnStart.setText("START");
         }
-
     }
 
     /**
      * method to start a timer for one step
      */
     private void doNextStep () {
+        Pomodoro nextStep = Pomodoro.WORKING;
         switch (mCurrentStep) {
             case WORKING:
                 mCurrentStep = mPomodoroLapCount % 4 == 0 ? Pomodoro.TEA_BREAK: Pomodoro.SHORT_BREAK;
@@ -142,11 +143,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case SHORT_BREAK:
             case TEA_BREAK:
                 mCurrentStep = Pomodoro.WORKING;
+                mPomodoroLapCount++;
+                nextStep = mPomodoroLapCount % 4 == 0 ? Pomodoro.TEA_BREAK: Pomodoro.SHORT_BREAK;
                 etTaskName.setEnabled(true);
                 break;
         }
+        updateView(nextStep.name());
         setTimerValues();
         setProgressBarValues();
+        if(countDownTimer != null)
+            countDownTimer.start();
     }
 
     /**
@@ -161,29 +167,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     /**
+     * method to set circular progress bar values
+     */
+    private void setProgressBarValues() {
+        progressBarCircle.setMax((int) timeCountInMilliSeconds / 1000);
+        progressBarCircle.setProgress((int) timeCountInMilliSeconds / 1000);
+    }
+
+    /**
      * method to start count down timer
      */
     private void startCountDownTimer() {
+        if(countDownTimer == null)
         countDownTimer = new CountDownTimer(timeCountInMilliSeconds, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-
                 tvTime.setText(hmsTimeFormatter(millisUntilFinished));
-
                 progressBarCircle.setProgress((int) (millisUntilFinished / 1000));
-
             }
 
             @Override
             public void onFinish() {
-//                tvTime.setText(hmsTimeFormatter(timeCountInMilliSeconds));
-                ringTheBell();
+                tvTime.setText(hmsTimeFormatter(0));
+                progressBarCircle.setProgress(0);
+//                ringTheBell();
                 doNextStep();
             }
-
         };
-        countDownTimer.start();
-        ringTheBell();
+        else {
+            countDownTimer.start();
+            ringTheBell();
+        }
     }
 
     /**
@@ -195,11 +209,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     /**
-     * method to set circular progress bar values
+     * method to convert millisecond to time format
+     *
+     * @param milliSeconds
+     * @return HH:mm:ss time formatted string
      */
-    private void setProgressBarValues() {
-        progressBarCircle.setMax((int) timeCountInMilliSeconds / 1000);
-        progressBarCircle.setProgress((int) timeCountInMilliSeconds / 1000);
+    private String hmsTimeFormatter(long milliSeconds) {
+        String hms = String.format("%02d:%02d",
+//                TimeUnit.MILLISECONDS.toHours(milliSeconds),
+                TimeUnit.MILLISECONDS.toMinutes(milliSeconds) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(milliSeconds)),
+                TimeUnit.MILLISECONDS.toSeconds(milliSeconds) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(milliSeconds)));
+
+        return hms;
     }
 
     /**
@@ -207,29 +228,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void ringTheBell () {
         try {
-            Uri notification = RingtoneManager.getDefaultUri(mCurrentStep == Pomodoro.WORKING ? RingtoneManager.TYPE_ALARM: RingtoneManager.TYPE_NOTIFICATION);
+            Uri notification = RingtoneManager.getDefaultUri(mCurrentStep == Pomodoro.WORKING ?
+                    RingtoneManager.TYPE_NOTIFICATION: RingtoneManager.TYPE_NOTIFICATION);
             Ringtone ringtone = RingtoneManager.getRingtone(getApplicationContext(), notification);
             ringtone.play();
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * method to convert millisecond to time format
-     *
-     * @param milliSeconds
-     * @return HH:mm:ss time formatted string
-     */
-    private String hmsTimeFormatter(long milliSeconds) {
-
-        String hms = String.format("%02d:%02d",
-//                TimeUnit.MILLISECONDS.toHours(milliSeconds),
-                TimeUnit.MILLISECONDS.toMinutes(milliSeconds) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(milliSeconds)),
-                TimeUnit.MILLISECONDS.toSeconds(milliSeconds) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(milliSeconds)));
-
-        return hms;
-
-
     }
 }

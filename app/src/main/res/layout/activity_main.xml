@@ -80,7 +80,7 @@
         android:id="@+id/tv_count"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Count : #"
+        android:text="@string/text_working_time"
         android:textSize="18sp"
         android:layout_below="@id/progress_bar_circle"
         android:layout_marginTop="10dp"
@@ -103,7 +103,7 @@
         android:layout_toLeftOf="@id/iv_next_icon"
         android:layout_marginRight="10dp"
         android:gravity="center"
-        android:text="Next: #"
+        android:text="@string/text_next_step"
         android:textSize="18sp"
         />
 
