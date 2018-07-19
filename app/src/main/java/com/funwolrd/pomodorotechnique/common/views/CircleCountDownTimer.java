@@ -24,6 +24,7 @@ public class CircleCountDownTimer extends RelativeLayout implements CountDownTim
     private CountDownTimer mCountDownTimer;
     private long mTimeCountInMilliSeconds;
     private CountDownCallback mCallback;
+    private boolean isBlinkForDelayTime = false;
 
     public CircleCountDownTimer(Context context) {
         super(context);
@@ -52,6 +53,8 @@ public class CircleCountDownTimer extends RelativeLayout implements CountDownTim
             mCountDownTimer = null;
         }
         mCountDownTimer = new CountDownTimer(mTimeCountInMilliSeconds, COUNT_DOWN_INTERVAL) {
+            boolean blink = false;
+            int count = 0;
             @Override
             public void onTick(long millisUntilFinished) {
                 tvTime.setText(Utils.msTimeFormatter(millisUntilFinished));
@@ -70,10 +73,18 @@ public class CircleCountDownTimer extends RelativeLayout implements CountDownTim
                         }
                     }, COUNT_DOWN_INTERVAL);
                 }*/
+                if (isBlinkForDelayTime && count == 10) {
+                    tvTime.setVisibility(blink ? INVISIBLE : VISIBLE);
+                    blink = !blink;
+                    count = 0;
+                } else {
+                    count++;
+                }
             }
 
             @Override
             public void onFinish() {
+                tvTime.setVisibility(VISIBLE);
                 mCallback.onFinishCountDown();
             }
         }.start();
@@ -96,6 +107,7 @@ public class CircleCountDownTimer extends RelativeLayout implements CountDownTim
 
     private void setTimerValues(long time) {
         mTimeCountInMilliSeconds = time * 1000;
+        isBlinkForDelayTime = (time == 5) ? true : false;
     }
 
     private void setProgressBarValues() {
