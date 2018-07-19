@@ -15,6 +15,9 @@ import com.funwolrd.pomodorotechnique.common.Utils;
  * Created by ThanhTD on 7/19/2018.
  */
 public class CircleCountDownTimer extends RelativeLayout implements CountDownTimerView {
+    private final String TAG = CircleCountDownTimer.class.getName();
+
+    private final int COUNT_DOWN_INTERVAL = 1000;
 
     private ProgressBar progressBarCircle;
     private TextView tvTime;
@@ -48,24 +51,34 @@ public class CircleCountDownTimer extends RelativeLayout implements CountDownTim
             mCountDownTimer.cancel();
             mCountDownTimer = null;
         }
-        mCountDownTimer = new CountDownTimer(mTimeCountInMilliSeconds, 1000) {
+        mCountDownTimer = new CountDownTimer(mTimeCountInMilliSeconds, COUNT_DOWN_INTERVAL) {
             @Override
             public void onTick(long millisUntilFinished) {
                 tvTime.setText(Utils.msTimeFormatter(millisUntilFinished));
-                progressBarCircle.setProgress((int) (millisUntilFinished / 1000));
+                progressBarCircle.setProgress((int) (millisUntilFinished / COUNT_DOWN_INTERVAL));
                 mCallback.onCountDown();
+
+                //fix bug - not display progress + time at time 0 when COUNT_DOWN_INTERVAL = 1000
+                long seconds = millisUntilFinished / COUNT_DOWN_INTERVAL;
+                if(seconds == 1000 / COUNT_DOWN_INTERVAL) {
+                    postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+//                            Log.d(TAG, "onTick: "+ (seconds - 1000 / COUNT_DOWN_INTERVAL));
+                            tvTime.setText(Utils.msTimeFormatter(0));
+                            progressBarCircle.setProgress(0);
+                        }
+                    }, COUNT_DOWN_INTERVAL);
+                }
             }
 
             @Override
             public void onFinish() {
-                //fixme : timer not display at time 0
-                tvTime.setText(Utils.msTimeFormatter(0));
-                progressBarCircle.setProgress(0);
                 mCallback.onFinishCountDown();
             }
-        };
+        }.start();
         mCallback.onStartCountDown();
-        mCountDownTimer.start();
+//        mCountDownTimer.start();
     }
 
     @Override
@@ -86,8 +99,8 @@ public class CircleCountDownTimer extends RelativeLayout implements CountDownTim
     }
 
     private void setProgressBarValues() {
-        progressBarCircle.setMax((int) mTimeCountInMilliSeconds / 1000);
-        progressBarCircle.setProgress((int) mTimeCountInMilliSeconds / 1000);
+        progressBarCircle.setMax((int) mTimeCountInMilliSeconds / COUNT_DOWN_INTERVAL);
+        progressBarCircle.setProgress((int) mTimeCountInMilliSeconds / COUNT_DOWN_INTERVAL);
     }
 
 }
