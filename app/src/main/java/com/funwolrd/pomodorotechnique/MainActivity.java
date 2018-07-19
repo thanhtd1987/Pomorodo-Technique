@@ -21,6 +21,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final int TEA_BREAK_TIME_20 = 20 * SECOND_IN_MINUTE;
     private final int TEA_BREAK_TIME_25 = 25 * SECOND_IN_MINUTE;
     private final int TEA_BREAK_TIME_30 = 30 * SECOND_IN_MINUTE;
+    private  String SOUND_REST_URL; // = "android.resource://"+getPackageName()+"/raw/sound_rest.mp3";
+    private  String SOUND_WORKING_URL;// = "android.resource://"+getPackageName()+"/raw/sound_working.mp3";
 
     private enum ProcessStatus {
         STARTED,
@@ -47,6 +49,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Pomodoro mCurrentStep = Pomodoro.SHORT_BREAK;
     private int mPomodoroLapCount = 0;
     private boolean isDelayForNextStep = false;
+    Ringtone mRingtone;
 
     private EditText etTaskName;
     private ImageView ivNextTask;
@@ -77,6 +80,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         tvNextStep = findViewById(R.id.tv_next_step);
 
         updateView(getString(R.string.text_ready));
+        SOUND_REST_URL = "android.resource://"+getPackageName()+"/raw/sound_rest.mp3";
+        SOUND_WORKING_URL = "android.resource://"+getPackageName()+"/raw/sound_working.mp3";
     }
 
     private void initListeners() {
@@ -195,11 +200,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * notify start - end of step by sound
      */
     private void ringTheBell() {
+//        if(mRingtone == null)
+        {
+            String url = mCurrentStep == Pomodoro.WORKING ? SOUND_WORKING_URL : SOUND_REST_URL;
+            Uri soundPath = Uri.parse(url);
+//            Uri notification = RingtoneManager.getDefaultUri(mCurrentStep == Pomodoro.WORKING ?
+//                    RingtoneManager.TYPE_NOTIFICATION : RingtoneManager.TYPE_NOTIFICATION);
+            mRingtone = RingtoneManager.getRingtone(getApplicationContext(), soundPath);
+        }
         try {
-            Uri notification = RingtoneManager.getDefaultUri(mCurrentStep == Pomodoro.WORKING ?
-                    RingtoneManager.TYPE_NOTIFICATION : RingtoneManager.TYPE_NOTIFICATION);
-            Ringtone ringtone = RingtoneManager.getRingtone(getApplicationContext(), notification);
-            ringtone.play();
+            mRingtone.play();
+//            mRingtone = null;
         } catch (Exception e) {
             e.printStackTrace();
         }
