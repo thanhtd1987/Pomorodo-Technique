@@ -3,21 +3,19 @@ package com.funwolrd.pomodorotechnique;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import java.util.concurrent.TimeUnit;
+import com.funwolrd.pomodorotechnique.common.views.CircleCountDownTimer;
+import com.funwolrd.pomodorotechnique.common.views.CountDownTimerView;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, CountDownTimerView.CountDownCallback{
 
-    private long timeCountInMilliSeconds = 1 * 60000;
     private final int DELAY_TIME_SECOND = 5;
     private final int TEA_BREAK_TIME_20 = 20;
     private final int TEA_BREAK_TIME_25 = 25;
@@ -29,9 +27,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private enum Pomodoro {
-        WORKING(25),
-        SHORT_BREAK(5),
-        TEA_BREAK(15);
+        WORKING(1),
+        SHORT_BREAK(1),
+        TEA_BREAK(1);
 
         private int value;
 
@@ -45,14 +43,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private int mPomodoroLapCount = 0;
     private boolean isDelayForNextStep = false;
 
-    private ProgressBar progressBarCircle;
-    private TextView tvTime;
     private EditText etTaskName;
     private ImageView ivNextTask;
     private ImageView ivTaskList;
-    private CountDownTimer countDownTimer;
     private TextView btnStart;
     private TextView tvCount, tvNextStep;
+    private CountDownTimerView mCountDownTimerView;
 
 
     @Override
@@ -67,8 +63,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initViews() {
-        progressBarCircle = findViewById(R.id.progress_bar_circle);
-        tvTime = findViewById(R.id.tv_time);
+        mCountDownTimerView = (CircleCountDownTimer) findViewById(R.id.circle_count_down_timer);
         etTaskName = findViewById(R.id.et_task_name);
         ivNextTask = findViewById(R.id.iv_next_task);
         ivTaskList = findViewById(R.id.iv_task_list);
@@ -80,6 +75,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initListeners() {
+        mCountDownTimerView.setCallback(this);
         ivNextTask.setOnClickListener(this);
         ivTaskList.setOnClickListener(this);
         btnStart.setOnClickListener(this);
@@ -110,23 +106,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         tvNextStep.setText(String.format(getString(R.string.text_next_step), nextStep));
     }
 
+    private void resetView() {
+        mPomodoroLapCount = 0;
+        mCurrentStep = Pomodoro.SHORT_BREAK;
+        updateView(Pomodoro.WORKING.name());
+    }
+
     /**
      * method to start and stop count down timer
      */
     private void runPomodoroProcess() {
         if (mProcessStatus == ProcessStatus.STOPPED) {
-            doNextStep();
-            // changing the timer status to started
             mProcessStatus = ProcessStatus.STARTED;
-            // call to start the count down timer
-            startCountDownTimer();
+            doNextStep();
+            mCountDownTimerView.startCountDown();
             btnStart.setText("STOP");
         } else {
-            etTaskName.setEnabled(true);
-            // changing the timer status to stopped
             mProcessStatus = ProcessStatus.STOPPED;
-            stopCountDownTimer();
+            mCountDownTimerView.stopCountDown();
+            etTaskName.setEnabled(true);
             btnStart.setText("START");
+            resetView();
         }
     }
 
@@ -149,79 +149,42 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
         }
         updateView(nextStep.name());
-        setTimerValues();
-        setProgressBarValues();
-        if(countDownTimer != null)
-            countDownTimer.start();
+        mCountDownTimerView.setTimerInMinute(mCurrentStep.value);
+        mCountDownTimerView.startCountDown();
+    }
+
+
+    @Override
+    public void onStartCountDown() {
+        ringTheBell();
+    }
+
+    @Override
+    public void onStopCountDown() {
+        resetView();
+    }
+
+    @Override
+    public void onFinishCountDown() {
+        ringTheBell();
+        doNextStep();
+    }
+
+    @Override
+    public void onCountDown() {
+
     }
 
     /**
      * method to initialize the values for count down timer
      */
-    private void setTimerValues() {
-        // assigning values after converting to milliseconds
-//        if(isDelayForNextStep)
-//            timeCountInMilliSeconds = DELAY_TIME_SECOND * 60 * 1000;
-//        else
-            timeCountInMilliSeconds = mCurrentStep.value * 60 * 1000;
-    }
-
-    /**
-     * method to set circular progress bar values
-     */
-    private void setProgressBarValues() {
-        progressBarCircle.setMax((int) timeCountInMilliSeconds / 1000);
-        progressBarCircle.setProgress((int) timeCountInMilliSeconds / 1000);
-    }
-
-    /**
-     * method to start count down timer
-     */
-    private void startCountDownTimer() {
-        if(countDownTimer == null)
-        countDownTimer = new CountDownTimer(timeCountInMilliSeconds, 1000) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-                tvTime.setText(hmsTimeFormatter(millisUntilFinished));
-                progressBarCircle.setProgress((int) (millisUntilFinished / 1000));
-            }
-
-            @Override
-            public void onFinish() {
-                tvTime.setText(hmsTimeFormatter(0));
-                progressBarCircle.setProgress(0);
-//                ringTheBell();
-                doNextStep();
-            }
-        };
-        else {
-            countDownTimer.start();
-            ringTheBell();
-        }
-    }
-
-    /**
-     * method to stop count down timer
-     */
-    private void stopCountDownTimer() {
-        countDownTimer.cancel();
-        countDownTimer = null;
-    }
-
-    /**
-     * method to convert millisecond to time format
-     *
-     * @param milliSeconds
-     * @return HH:mm:ss time formatted string
-     */
-    private String hmsTimeFormatter(long milliSeconds) {
-        String hms = String.format("%02d:%02d",
-//                TimeUnit.MILLISECONDS.toHours(milliSeconds),
-                TimeUnit.MILLISECONDS.toMinutes(milliSeconds) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(milliSeconds)),
-                TimeUnit.MILLISECONDS.toSeconds(milliSeconds) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(milliSeconds)));
-
-        return hms;
-    }
+//    private void setTimerValues() {
+//        // assigning values after converting to milliseconds
+////        if(isDelayForNextStep)
+////            timeCountInMilliSeconds = DELAY_TIME_SECOND * 60 * 1000;
+////        else
+//            timeCountInMilliSeconds = mCurrentStep.value * 60 * 1000;
+//    }
 
     /**
      * notify start - end of step by sound
