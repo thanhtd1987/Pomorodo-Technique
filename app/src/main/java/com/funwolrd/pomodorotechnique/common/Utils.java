@@ -29,4 +29,8 @@ public class Utils {
 
         return ms;
     }
+
+    public static boolean isInWarningTime(long time, int warningTimeInSecond) {
+        return TimeUnit.SECONDS.toMillis(warningTimeInSecond) >= time;
+    }
 }

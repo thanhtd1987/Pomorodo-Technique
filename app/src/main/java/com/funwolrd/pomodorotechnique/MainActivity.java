@@ -159,6 +159,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         updateView(nextStep.name());
         mCountDownTimerView.setTimerInSecond(mCurrentStep.value);
+        mCountDownTimerView.enableWarningOutOfRestTime(mCurrentStep != Pomodoro.WORKING);
         mCountDownTimerView.startCountDown();
         ringTheBell();
         isDelayForNextStep = true;
@@ -184,9 +185,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onFinishCountDown() {
         ringTheBell();
-        if (isDelayForNextStep)
-            showDelayTime();
-        else
+//        if (isDelayForNextStep)
+//            showDelayTime();
+//        else
             doNextStep();
     }
 

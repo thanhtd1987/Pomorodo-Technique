@@ -13,6 +13,8 @@ public interface CountDownTimerView {
 
     void setCallback(CountDownCallback callback);
 
+    void enableWarningOutOfRestTime(boolean isEnable);
+
     interface CountDownCallback {
         void onStartCountDown();
 

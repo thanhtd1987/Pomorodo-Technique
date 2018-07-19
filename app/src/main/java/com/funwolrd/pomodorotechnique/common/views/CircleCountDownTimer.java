@@ -18,13 +18,14 @@ public class CircleCountDownTimer extends RelativeLayout implements CountDownTim
     private final String TAG = CircleCountDownTimer.class.getName();
 
     private final int COUNT_DOWN_INTERVAL = 10;
+    private final int WARNING_TIME_IN_SECOND = 10;
 
     private ProgressBar progressBarCircle;
     private TextView tvTime;
     private CountDownTimer mCountDownTimer;
     private long mTimeCountInMilliSeconds;
     private CountDownCallback mCallback;
-    private boolean isBlinkForDelayTime = false;
+    private boolean isWarningOutOfRestTime = true;
 
     public CircleCountDownTimer(Context context) {
         super(context);
@@ -44,6 +45,11 @@ public class CircleCountDownTimer extends RelativeLayout implements CountDownTim
     @Override
     public void setCallback(CountDownCallback callback) {
         mCallback = callback;
+    }
+
+    @Override
+    public void enableWarningOutOfRestTime(boolean isEnable) {
+        isWarningOutOfRestTime = isEnable;
     }
 
     @Override
@@ -73,18 +79,22 @@ public class CircleCountDownTimer extends RelativeLayout implements CountDownTim
                         }
                     }, COUNT_DOWN_INTERVAL);
                 }*/
-                if (isBlinkForDelayTime && count == 10) {
-                    tvTime.setVisibility(blink ? INVISIBLE : VISIBLE);
-                    blink = !blink;
-                    count = 0;
-                } else {
-                    count++;
+                if (isWarningOutOfRestTime && Utils.isInWarningTime(millisUntilFinished, WARNING_TIME_IN_SECOND)) {
+                    tvTime.setTextColor(getResources().getColor(R.color.warning_color));
+                    if (count == 10) {
+                        tvTime.setVisibility(blink ? INVISIBLE : VISIBLE);
+                        blink = !blink;
+                        count = 0;
+                    } else {
+                        count++;
+                    }
                 }
             }
 
             @Override
             public void onFinish() {
                 tvTime.setVisibility(VISIBLE);
+                tvTime.setTextColor(getResources().getColor(R.color.colorYellow));
                 mCallback.onFinishCountDown();
             }
         }.start();
@@ -107,7 +117,6 @@ public class CircleCountDownTimer extends RelativeLayout implements CountDownTim
 
     private void setTimerValues(long time) {
         mTimeCountInMilliSeconds = time * 1000;
-        isBlinkForDelayTime = (time == 5) ? true : false;
     }
 
     private void setProgressBarValues() {
