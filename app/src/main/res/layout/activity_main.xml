@@ -3,67 +3,64 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity"
+    android:background="@color/colorBackground"
     android:padding="10dp"
-    android:background="@color/colorBackground">
+    tools:context=".MainActivity">
 
     <TextView
         android:id="@+id/tv_task"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Task :"
-        android:textStyle="bold"
         android:layout_alignBottom="@id/et_task_name"
         android:layout_alignTop="@id/et_task_name"
         android:gravity="center"
-         />
+        android:text="Task :"
+        android:textStyle="bold" />
 
     <EditText
         android:id="@+id/et_task_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_toLeftOf="@id/iv_next_task"
         android:layout_toRightOf="@+id/tv_task"
         android:text="do something"
-        android:textColor="@color/colorYellow"
-        android:layout_toLeftOf="@id/iv_next_task"/>
+        android:textColor="@color/colorYellow" />
 
     <ImageView
         android:id="@+id/iv_next_task"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@android:drawable/ic_media_ff"
-        android:layout_toLeftOf="@id/iv_task_list"
         android:layout_alignBottom="@id/et_task_name"
         android:layout_alignTop="@id/et_task_name"
-        android:paddingLeft="5dp"/>
+        android:layout_toLeftOf="@id/iv_task_list"
+        android:paddingLeft="5dp"
+        android:src="@android:drawable/ic_media_ff" />
 
     <ImageView
         android:id="@+id/iv_task_list"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@android:drawable/ic_dialog_dialer"
-        android:layout_alignParentRight="true"
         android:layout_alignBottom="@id/et_task_name"
+        android:layout_alignParentRight="true"
         android:layout_alignTop="@id/et_task_name"
-        android:paddingLeft="5dp"/>
+        android:paddingLeft="5dp"
+        android:src="@android:drawable/ic_dialog_dialer" />
 
     <com.funwolrd.pomodorotechnique.common.views.CircleCountDownTimer
         android:id="@+id/circle_count_down_timer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/et_task_name"
-        android:layout_centerHorizontal="true"
-        />
+        android:layout_centerHorizontal="true" />
 
     <TextView
         android:id="@+id/tv_count"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/text_working_time"
-        android:textSize="18sp"
         android:layout_below="@+id/circle_count_down_timer"
         android:layout_marginTop="10dp"
-        />
+        android:text="@string/text_working_time"
+        android:textSize="18sp" />
 
     <ImageView
         android:id="@+id/iv_next_icon"
@@ -71,35 +68,34 @@
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_alignTop="@id/tv_count"
-        android:src="@drawable/ic_music"/>
+        android:src="@drawable/ic_music" />
 
     <TextView
         android:id="@+id/tv_next_step"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignTop="@id/iv_next_icon"
         android:layout_alignBottom="@id/iv_next_icon"
-        android:layout_toLeftOf="@id/iv_next_icon"
+        android:layout_alignTop="@id/iv_next_icon"
         android:layout_marginRight="10dp"
+        android:layout_toLeftOf="@id/iv_next_icon"
         android:gravity="center"
         android:text="@string/text_next_step"
-        android:textSize="18sp"
-        />
+        android:textSize="18sp" />
 
     <TextView
         android:id="@+id/btn_start"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
         android:layout_alignLeft="@id/circle_count_down_timer"
+        android:layout_alignParentBottom="true"
         android:layout_alignRight="@id/circle_count_down_timer"
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/bg_button"
         android:gravity="center"
+        android:padding="15dp"
         android:text="START"
         android:textColor="@color/colorYellow"
-        android:textStyle="bold"
         android:textSize="20sp"
-        android:background="@drawable/bg_button"
-        android:padding="15dp"/>
+        android:textStyle="bold" />
 
 </RelativeLayout>

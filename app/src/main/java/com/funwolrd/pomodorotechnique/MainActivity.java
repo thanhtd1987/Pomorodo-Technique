@@ -14,7 +14,7 @@ import android.widget.TextView;
 import com.funwolrd.pomodorotechnique.common.views.CircleCountDownTimer;
 import com.funwolrd.pomodorotechnique.common.views.CountDownTimerView;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, CountDownTimerView.CountDownCallback{
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, CountDownTimerView.CountDownCallback {
 
     private final int DELAY_TIME_SECOND = 5;
     private final int TEA_BREAK_TIME_20 = 20;
@@ -133,18 +133,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     /**
      * method to start a timer for one step
      */
-    private void doNextStep () {
+    private void doNextStep() {
         Pomodoro nextStep = Pomodoro.WORKING;
         switch (mCurrentStep) {
             case WORKING:
-                mCurrentStep = mPomodoroLapCount % 4 == 0 ? Pomodoro.TEA_BREAK: Pomodoro.SHORT_BREAK;
+                mCurrentStep = mPomodoroLapCount % 4 == 0 ? Pomodoro.TEA_BREAK : Pomodoro.SHORT_BREAK;
                 etTaskName.setEnabled(false);
                 break;
             case SHORT_BREAK:
             case TEA_BREAK:
                 mCurrentStep = Pomodoro.WORKING;
                 mPomodoroLapCount++;
-                nextStep = mPomodoroLapCount % 4 == 0 ? Pomodoro.TEA_BREAK: Pomodoro.SHORT_BREAK;
+                nextStep = mPomodoroLapCount % 4 == 0 ? Pomodoro.TEA_BREAK : Pomodoro.SHORT_BREAK;
                 etTaskName.setEnabled(true);
                 break;
         }
@@ -189,10 +189,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     /**
      * notify start - end of step by sound
      */
-    private void ringTheBell () {
+    private void ringTheBell() {
         try {
             Uri notification = RingtoneManager.getDefaultUri(mCurrentStep == Pomodoro.WORKING ?
-                    RingtoneManager.TYPE_NOTIFICATION: RingtoneManager.TYPE_NOTIFICATION);
+                    RingtoneManager.TYPE_NOTIFICATION : RingtoneManager.TYPE_NOTIFICATION);
             Ringtone ringtone = RingtoneManager.getRingtone(getApplicationContext(), notification);
             ringtone.play();
         } catch (Exception e) {
