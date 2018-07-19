@@ -21,8 +21,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final int TEA_BREAK_TIME_20 = 20 * SECOND_IN_MINUTE;
     private final int TEA_BREAK_TIME_25 = 25 * SECOND_IN_MINUTE;
     private final int TEA_BREAK_TIME_30 = 30 * SECOND_IN_MINUTE;
-    private  String SOUND_REST_URL; // = "android.resource://"+getPackageName()+"/raw/sound_rest.mp3";
-    private  String SOUND_WORKING_URL;// = "android.resource://"+getPackageName()+"/raw/sound_working.mp3";
+    private final String SOUND_REST_URL = "sound_rest.mp3";
+    private final String SOUND_WORKING_URL = "sound_working.mp3";
+    private final String SOUND_DELAY_URL = "sound_delay.mp3";
 
     private enum ProcessStatus {
         STARTED,
@@ -80,8 +81,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         tvNextStep = findViewById(R.id.tv_next_step);
 
         updateView(getString(R.string.text_ready));
-        SOUND_REST_URL = "android.resource://"+getPackageName()+"/raw/sound_rest.mp3";
-        SOUND_WORKING_URL = "android.resource://"+getPackageName()+"/raw/sound_working.mp3";
     }
 
     private void initListeners() {
@@ -202,7 +201,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void ringTheBell() {
 //        if(mRingtone == null)
         {
-            String url = mCurrentStep == Pomodoro.WORKING ? SOUND_WORKING_URL : SOUND_REST_URL;
+            String url = "android.resource://" + getPackageName() + "/raw/"
+                    + (mCurrentStep == Pomodoro.WORKING ? SOUND_WORKING_URL : SOUND_REST_URL);
             Uri soundPath = Uri.parse(url);
 //            Uri notification = RingtoneManager.getDefaultUri(mCurrentStep == Pomodoro.WORKING ?
 //                    RingtoneManager.TYPE_NOTIFICATION : RingtoneManager.TYPE_NOTIFICATION);
