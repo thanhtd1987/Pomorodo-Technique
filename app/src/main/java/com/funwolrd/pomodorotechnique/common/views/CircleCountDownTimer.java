@@ -17,7 +17,7 @@ import com.funwolrd.pomodorotechnique.common.Utils;
 public class CircleCountDownTimer extends RelativeLayout implements CountDownTimerView {
     private final String TAG = CircleCountDownTimer.class.getName();
 
-    private final int COUNT_DOWN_INTERVAL = 1000;
+    private final int COUNT_DOWN_INTERVAL = 10;
 
     private ProgressBar progressBarCircle;
     private TextView tvTime;
@@ -59,7 +59,7 @@ public class CircleCountDownTimer extends RelativeLayout implements CountDownTim
                 mCallback.onCountDown();
 
                 //fix bug - not display progress + time at time 0 when COUNT_DOWN_INTERVAL = 1000
-                long seconds = millisUntilFinished / COUNT_DOWN_INTERVAL;
+                /*long seconds = millisUntilFinished / COUNT_DOWN_INTERVAL;
                 if(seconds == 1000 / COUNT_DOWN_INTERVAL) {
                     postDelayed(new Runnable() {
                         @Override
@@ -69,7 +69,7 @@ public class CircleCountDownTimer extends RelativeLayout implements CountDownTim
                             progressBarCircle.setProgress(0);
                         }
                     }, COUNT_DOWN_INTERVAL);
-                }
+                }*/
             }
 
             @Override
