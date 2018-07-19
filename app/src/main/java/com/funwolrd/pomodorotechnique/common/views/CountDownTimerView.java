@@ -9,7 +9,7 @@ public interface CountDownTimerView {
 
     void stopCountDown();
 
-    void setTimerInMinute(float time);
+    void setTimerInSecond(long time);
 
     void setCallback(CountDownCallback callback);
 

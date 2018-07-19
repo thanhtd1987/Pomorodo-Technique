@@ -16,10 +16,11 @@ import com.funwolrd.pomodorotechnique.common.views.CountDownTimerView;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, CountDownTimerView.CountDownCallback {
 
+    private static final int SECOND_IN_MINUTE = 60;
     private final int DELAY_TIME_SECOND = 5;
-    private final int TEA_BREAK_TIME_20 = 20;
-    private final int TEA_BREAK_TIME_25 = 25;
-    private final int TEA_BREAK_TIME_30 = 30;
+    private final int TEA_BREAK_TIME_20 = 20 * SECOND_IN_MINUTE;
+    private final int TEA_BREAK_TIME_25 = 25 * SECOND_IN_MINUTE;
+    private final int TEA_BREAK_TIME_30 = 30 * SECOND_IN_MINUTE;
 
     private enum ProcessStatus {
         STARTED,
@@ -27,14 +28,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private enum Pomodoro {
-        WORKING(1),
-        SHORT_BREAK(1),
-        TEA_BREAK(1);
+        WORKING(25),
+        SHORT_BREAK(5),
+        TEA_BREAK(15);
 
         private int value;
+        private boolean debug = true;
 
         Pomodoro(int value) {
-            this.value = value;
+            if (debug)
+                this.value = value;
+            else
+                this.value = value * SECOND_IN_MINUTE;
         }
     }
 
@@ -71,7 +76,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         tvCount = findViewById(R.id.tv_count);
         tvNextStep = findViewById(R.id.tv_next_step);
 
-        updateView(mCurrentStep.name());
+        updateView(getString(R.string.text_ready));
     }
 
     private void initListeners() {
@@ -109,7 +114,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void resetView() {
         mPomodoroLapCount = 0;
         mCurrentStep = Pomodoro.SHORT_BREAK;
-        updateView(Pomodoro.WORKING.name());
+        updateView(getString(R.string.text_ready));
     }
 
     /**
@@ -120,12 +125,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mProcessStatus = ProcessStatus.STARTED;
             doNextStep();
             mCountDownTimerView.startCountDown();
-            btnStart.setText("STOP");
+            btnStart.setText(getString(R.string.text_stop));
         } else {
             mProcessStatus = ProcessStatus.STOPPED;
             mCountDownTimerView.stopCountDown();
             etTaskName.setEnabled(true);
-            btnStart.setText("START");
+            btnStart.setText(getString(R.string.text_start));
             resetView();
         }
     }
@@ -149,14 +154,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
         }
         updateView(nextStep.name());
-        mCountDownTimerView.setTimerInMinute(mCurrentStep.value);
+        mCountDownTimerView.setTimerInSecond(mCurrentStep.value);
         mCountDownTimerView.startCountDown();
+        ringTheBell();
+        isDelayForNextStep = true;
     }
 
+    private void showDelayTime() {
+        mCountDownTimerView.setTimerInSecond(DELAY_TIME_SECOND);
+        mCountDownTimerView.startCountDown();
+        tvNextStep.setText(String.format(getString(R.string.text_next_step), getString(R.string.text_ready)));
+        isDelayForNextStep = false;
+    }
 
     @Override
     public void onStartCountDown() {
-        ringTheBell();
+//        ringTheBell();
     }
 
     @Override
@@ -167,24 +180,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onFinishCountDown() {
         ringTheBell();
-        doNextStep();
+        if (isDelayForNextStep)
+            showDelayTime();
+        else
+            doNextStep();
     }
 
     @Override
     public void onCountDown() {
 
     }
-
-    /**
-     * method to initialize the values for count down timer
-     */
-//    private void setTimerValues() {
-//        // assigning values after converting to milliseconds
-////        if(isDelayForNextStep)
-////            timeCountInMilliSeconds = DELAY_TIME_SECOND * 60 * 1000;
-////        else
-//            timeCountInMilliSeconds = mCurrentStep.value * 60 * 1000;
-//    }
 
     /**
      * notify start - end of step by sound

@@ -2,4 +2,7 @@
     <string name="app_name">Pomodoro Technique</string>
     <string name="text_working_time">Count : %d</string>
     <string name="text_next_step">Next: %s</string>
+    <string name="text_ready">Be ready!!</string>
+    <string name="text_start">START</string>
+    <string name="text_stop">STOP</string>
 </resources>

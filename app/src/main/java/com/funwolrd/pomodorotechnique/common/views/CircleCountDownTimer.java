@@ -44,24 +44,27 @@ public class CircleCountDownTimer extends RelativeLayout implements CountDownTim
 
     @Override
     public void startCountDown() {
-        if (mCountDownTimer == null) {
-            mCountDownTimer = new CountDownTimer(mTimeCountInMilliSeconds, 1000) {
-                @Override
-                public void onTick(long millisUntilFinished) {
-                    tvTime.setText(Utils.msTimeFormatter(millisUntilFinished));
-                    progressBarCircle.setProgress((int) (millisUntilFinished / 1000));
-                    mCallback.onCountDown();
-                }
-
-                @Override
-                public void onFinish() {
-                    tvTime.setText(Utils.msTimeFormatter(0));
-                    progressBarCircle.setProgress(0);
-                    mCallback.onFinishCountDown();
-                }
-            };
-            mCallback.onStartCountDown();
+        if (mCountDownTimer != null) {
+            mCountDownTimer.cancel();
+            mCountDownTimer = null;
         }
+        mCountDownTimer = new CountDownTimer(mTimeCountInMilliSeconds, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                tvTime.setText(Utils.msTimeFormatter(millisUntilFinished));
+                progressBarCircle.setProgress((int) (millisUntilFinished / 1000));
+                mCallback.onCountDown();
+            }
+
+            @Override
+            public void onFinish() {
+                //fixme : timer not display at time 0
+                tvTime.setText(Utils.msTimeFormatter(0));
+                progressBarCircle.setProgress(0);
+                mCallback.onFinishCountDown();
+            }
+        };
+        mCallback.onStartCountDown();
         mCountDownTimer.start();
     }
 
@@ -73,13 +76,13 @@ public class CircleCountDownTimer extends RelativeLayout implements CountDownTim
     }
 
     @Override
-    public void setTimerInMinute(float time) {
+    public void setTimerInSecond(long time) {
         setTimerValues(time);
         setProgressBarValues();
     }
 
-    private void setTimerValues(float time) {
-        mTimeCountInMilliSeconds = (int) time * 60 * 1000;
+    private void setTimerValues(long time) {
+        mTimeCountInMilliSeconds = time * 1000;
     }
 
     private void setProgressBarValues() {
