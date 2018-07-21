@@ -5,6 +5,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
@@ -21,8 +22,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final int TEA_BREAK_TIME_20 = 20 * SECOND_IN_MINUTE;
     private final int TEA_BREAK_TIME_25 = 25 * SECOND_IN_MINUTE;
     private final int TEA_BREAK_TIME_30 = 30 * SECOND_IN_MINUTE;
-    private final String SOUND_REST_URL = "sound_rest.mp3";
-    private final String SOUND_WORKING_URL = "sound_working.mp3";
+    private final String SOUND_REST = "sound_rest.mp3";
+    private final String SOUND_WORKING = "sound_working.mp3";
     private final String SOUND_DELAY_URL = "sound_delay.mp3";
 
     private enum ProcessStatus {
@@ -115,10 +116,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         tvNextStep.setText(String.format(getString(R.string.text_next_step), nextStep));
     }
 
-    private void resetView() {
-        mPomodoroLapCount = 0;
-        mCurrentStep = Pomodoro.SHORT_BREAK;
-        updateView(getString(R.string.text_ready));
+    private void onChangePomorodoProcess(boolean isStart) {
+        if (!isStart) {
+            mPomodoroLapCount = 0;
+            mCurrentStep = Pomodoro.SHORT_BREAK;
+            updateView(getString(R.string.text_ready));
+        }
+        btnStart.setText(isStart ? getString(R.string.text_stop) : getString(R.string.text_start));
+        btnStart.setSelected(isStart);
+        btnStart.setTextColor(isStart ? getColor(R.color.colorYellow) : getColor(R.color.colorPrimaryDark));
     }
 
     /**
@@ -129,13 +135,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mProcessStatus = ProcessStatus.STARTED;
             doNextStep();
             mCountDownTimerView.startCountDown();
-            btnStart.setText(getString(R.string.text_stop));
         } else {
             mProcessStatus = ProcessStatus.STOPPED;
             mCountDownTimerView.stopCountDown();
-            etTaskName.setEnabled(true);
-            btnStart.setText(getString(R.string.text_start));
-            resetView();
         }
     }
 
@@ -174,17 +176,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onStartCountDown() {
-//        ringTheBell();
+        onChangePomorodoProcess(true);
     }
 
     @Override
     public void onStopCountDown() {
-        resetView();
+        onChangePomorodoProcess(false);
     }
 
     @Override
     public void onFinishCountDown() {
-        ringTheBell();
 //        if (isDelayForNextStep)
 //            showDelayTime();
 //        else
@@ -201,9 +202,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void ringTheBell() {
 //        if(mRingtone == null)
+        mRingtone = null;
         {
-            String url = "android.resource://" + getPackageName() + "/raw/"
-                    + (mCurrentStep == Pomodoro.WORKING ? SOUND_WORKING_URL : SOUND_REST_URL);
+            String url = "android.resource://" /*+ getPackageName()*/ + "raw/"
+                    + (mCurrentStep == Pomodoro.WORKING ? SOUND_WORKING : SOUND_REST);
+            Log.d("DEBUG", "ringTheBell: "+url);
             Uri soundPath = Uri.parse(url);
 //            Uri notification = RingtoneManager.getDefaultUri(mCurrentStep == Pomodoro.WORKING ?
 //                    RingtoneManager.TYPE_NOTIFICATION : RingtoneManager.TYPE_NOTIFICATION);

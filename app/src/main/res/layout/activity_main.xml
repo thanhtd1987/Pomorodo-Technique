@@ -90,11 +90,11 @@
         android:layout_alignParentBottom="true"
         android:layout_alignRight="@id/circle_count_down_timer"
         android:layout_centerHorizontal="true"
-        android:background="@drawable/bg_button"
+        android:background="@drawable/selector_btn_background"
         android:gravity="center"
         android:padding="15dp"
         android:text="@string/text_start"
-        android:textColor="@color/colorYellow"
+        android:textColor="@color/colorPrimaryDark"
         android:textSize="20sp"
         android:textStyle="bold" />
 
