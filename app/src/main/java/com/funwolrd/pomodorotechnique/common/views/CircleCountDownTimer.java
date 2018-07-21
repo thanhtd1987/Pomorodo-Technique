@@ -60,7 +60,7 @@ public class CircleCountDownTimer extends RelativeLayout implements CountDownTim
         }
         mCountDownTimer = new CountDownTimer(mTimeCountInMilliSeconds, COUNT_DOWN_INTERVAL) {
             boolean blink = false;
-            int count = 0;
+            int countTimeForBlink = 0;
             @Override
             public void onTick(long millisUntilFinished) {
                 tvTime.setText(Utils.msTimeFormatter(millisUntilFinished));
@@ -80,21 +80,20 @@ public class CircleCountDownTimer extends RelativeLayout implements CountDownTim
                     }, COUNT_DOWN_INTERVAL);
                 }*/
                 if (isWarningOutOfRestTime && Utils.isInWarningTime(millisUntilFinished, WARNING_TIME_IN_SECOND)) {
-                    tvTime.setTextColor(getResources().getColor(R.color.warning_color));
-                    if (count == 10) {
+                    if (countTimeForBlink == 10) {
+                        tvTime.setTextColor(getResources().getColor(R.color.warning_color));
                         tvTime.setVisibility(blink ? INVISIBLE : VISIBLE);
                         blink = !blink;
-                        count = 0;
+                        countTimeForBlink = 0;
                     } else {
-                        count++;
+                        countTimeForBlink++;
                     }
                 }
             }
 
             @Override
             public void onFinish() {
-                tvTime.setVisibility(VISIBLE);
-                tvTime.setTextColor(getResources().getColor(R.color.colorYellow));
+                resetTimer();
                 mCallback.onFinishCountDown();
             }
         }.start();
@@ -106,6 +105,7 @@ public class CircleCountDownTimer extends RelativeLayout implements CountDownTim
     public void stopCountDown() {
         mCountDownTimer.cancel();
         mCountDownTimer = null;
+        resetTimer();
         mCallback.onStopCountDown();
     }
 
@@ -122,6 +122,13 @@ public class CircleCountDownTimer extends RelativeLayout implements CountDownTim
     private void setProgressBarValues() {
         progressBarCircle.setMax((int) mTimeCountInMilliSeconds / COUNT_DOWN_INTERVAL);
         progressBarCircle.setProgress((int) mTimeCountInMilliSeconds / COUNT_DOWN_INTERVAL);
+    }
+
+    private void resetTimer () {
+        tvTime.setVisibility(VISIBLE);
+        tvTime.setTextColor(getResources().getColor(R.color.colorYellow));
+        tvTime.setText(Utils.msTimeFormatter(0));
+        progressBarCircle.setProgress(0);
     }
 
 }
