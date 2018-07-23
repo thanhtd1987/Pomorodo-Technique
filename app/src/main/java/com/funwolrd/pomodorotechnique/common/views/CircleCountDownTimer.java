@@ -61,11 +61,16 @@ public class CircleCountDownTimer extends RelativeLayout implements CountDownTim
         mCountDownTimer = new CountDownTimer(mTimeCountInMilliSeconds, COUNT_DOWN_INTERVAL) {
             boolean blink = false;
             int countTimeForBlink = 0;
+            String lastTime = "";
             @Override
             public void onTick(long millisUntilFinished) {
-                tvTime.setText(Utils.msTimeFormatter(millisUntilFinished));
+                String time = Utils.msTimeFormatter(millisUntilFinished);
                 progressBarCircle.setProgress((int) (millisUntilFinished / COUNT_DOWN_INTERVAL));
-                mCallback.onCountDown();
+                if (!lastTime.equals(time)) {
+                    tvTime.setText(time);
+                    mCallback.onCountDown(time, 100 - (int) (millisUntilFinished * 100 / mTimeCountInMilliSeconds));
+                    lastTime = time;
+                }
 
                 //fix bug - not display progress + time at time 0 when COUNT_DOWN_INTERVAL = 1000
                 /*long seconds = millisUntilFinished / COUNT_DOWN_INTERVAL;

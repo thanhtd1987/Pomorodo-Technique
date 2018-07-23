@@ -1,11 +1,11 @@
 package com.funwolrd.pomodorotechnique;
 
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
-import android.support.v7.app.AppCompatActivity;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
@@ -22,9 +22,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final int TEA_BREAK_TIME_20 = 20 * SECOND_IN_MINUTE;
     private final int TEA_BREAK_TIME_25 = 25 * SECOND_IN_MINUTE;
     private final int TEA_BREAK_TIME_30 = 30 * SECOND_IN_MINUTE;
-    private final String SOUND_REST = "sound_rest.mp3";
-    private final String SOUND_WORKING = "sound_working.mp3";
-    private final String SOUND_DELAY_URL = "sound_delay.mp3";
+    private final int NOTIFICATION_ID = 111;
+
+    //setting
+    private boolean isNoSound = true;
 
     private enum ProcessStatus {
         STARTED,
@@ -50,8 +51,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ProcessStatus mProcessStatus = ProcessStatus.STOPPED;
     private Pomodoro mCurrentStep = Pomodoro.SHORT_BREAK;
     private int mPomodoroLapCount = 0;
-    private boolean isDelayForNextStep = false;
-    Ringtone mRingtone;
 
     private EditText etTaskName;
     private ImageView ivNextTask;
@@ -59,6 +58,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView btnStart;
     private TextView tvCount, tvNextStep;
     private CountDownTimerView mCountDownTimerView;
+
+    NotificationManagerCompat notificationManagerCompat;
+    NotificationCompat.Builder builder;
 
 
     @Override
@@ -124,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         btnStart.setText(isStart ? getString(R.string.text_stop) : getString(R.string.text_start));
         btnStart.setSelected(isStart);
-        btnStart.setTextColor(isStart ? getColor(R.color.colorYellow) : getColor(R.color.colorPrimaryDark));
+        btnStart.setTextColor(isStart ? getResources().getColor(R.color.colorYellow) : getResources().getColor(R.color.colorPrimaryDark));
     }
 
     /**
@@ -164,14 +166,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mCountDownTimerView.enableWarningOutOfRestTime(mCurrentStep != Pomodoro.WORKING);
         mCountDownTimerView.startCountDown();
         ringTheBell();
-        isDelayForNextStep = true;
-    }
-
-    private void showDelayTime() {
-        mCountDownTimerView.setTimerInSecond(DELAY_TIME_SECOND);
-        mCountDownTimerView.startCountDown();
-        tvNextStep.setText(String.format(getString(R.string.text_next_step), getString(R.string.text_ready)));
-        isDelayForNextStep = false;
+        callNotification();
     }
 
     @Override
@@ -186,37 +181,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onFinishCountDown() {
-//        if (isDelayForNextStep)
-//            showDelayTime();
-//        else
-            doNextStep();
+        doNextStep();
     }
 
     @Override
-    public void onCountDown() {
-
+    public void onCountDown(String remainTime, int progress) {
+        updateTimerProgress(remainTime, progress);
     }
 
     /**
      * notify start - end of step by sound
      */
     private void ringTheBell() {
-//        if(mRingtone == null)
-        mRingtone = null;
-        {
-            String url = "android.resource://" /*+ getPackageName()*/ + "raw/"
-                    + (mCurrentStep == Pomodoro.WORKING ? SOUND_WORKING : SOUND_REST);
-            Log.d("DEBUG", "ringTheBell: "+url);
-            Uri soundPath = Uri.parse(url);
-//            Uri notification = RingtoneManager.getDefaultUri(mCurrentStep == Pomodoro.WORKING ?
-//                    RingtoneManager.TYPE_NOTIFICATION : RingtoneManager.TYPE_NOTIFICATION);
-            mRingtone = RingtoneManager.getRingtone(getApplicationContext(), soundPath);
+        if (!isNoSound) {
+            MediaPlayer mp = MediaPlayer.create(this, mCurrentStep == Pomodoro.WORKING ? R.raw.sound_working : R.raw.sound_rest);
+            mp.setOnCompletionListener(mediaPlayer -> mp.release());
+            mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            mp.start();
         }
-        try {
-            mRingtone.play();
-//            mRingtone = null;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    }
+
+
+    private void callNotification() {
+        notificationManagerCompat = NotificationManagerCompat.from(this);
+        builder = new NotificationCompat.Builder(this, "channel");
+        builder.setContentTitle(mCurrentStep.name())
+                .setContentText("progress")
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setPriority(NotificationCompat.PRIORITY_HIGH);
+
+        builder.setProgress(100, 0, false);
+        notificationManagerCompat.notify(NOTIFICATION_ID, builder.build());
+
+    }
+
+    private void updateTimerProgress(String remainTime, int progress) {
+        builder.setProgress(100, progress, false);
+        String[] temp = remainTime.split(":");
+        builder.setContentText("remain: " + temp[0] + "m" + temp[1] + "s " + progress + "%");
+        notificationManagerCompat.notify(NOTIFICATION_ID, builder.build());
     }
 }

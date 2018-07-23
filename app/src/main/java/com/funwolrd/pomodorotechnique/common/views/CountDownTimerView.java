@@ -22,6 +22,6 @@ public interface CountDownTimerView {
 
         void onFinishCountDown();
 
-        void onCountDown();
+        void onCountDown(String remainTime, int progress);
     }
 }
