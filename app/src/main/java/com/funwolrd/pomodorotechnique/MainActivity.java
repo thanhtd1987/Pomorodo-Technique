@@ -1,5 +1,10 @@
 package com.funwolrd.pomodorotechnique;
 
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -11,9 +16,12 @@ import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.funwolrd.pomodorotechnique.common.views.CircleCountDownTimer;
 import com.funwolrd.pomodorotechnique.common.views.CountDownTimerView;
+
+import static android.app.Notification.EXTRA_NOTIFICATION_ID;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, CountDownTimerView.CountDownCallback {
 
@@ -23,6 +31,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final int TEA_BREAK_TIME_25 = 25 * SECOND_IN_MINUTE;
     private final int TEA_BREAK_TIME_30 = 30 * SECOND_IN_MINUTE;
     private final int NOTIFICATION_ID = 111;
+    private final String ACTION_STOP = "action_stop";
 
     //setting
     private boolean isNoSound = true;
@@ -137,9 +146,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mProcessStatus = ProcessStatus.STARTED;
             doNextStep();
             mCountDownTimerView.startCountDown();
+            initNotification();
+            initBroadcastReceiver();
         } else {
             mProcessStatus = ProcessStatus.STOPPED;
             mCountDownTimerView.stopCountDown();
+            cancelNotification();
+            unregisterReceiver(receiver);
         }
     }
 
@@ -166,7 +179,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mCountDownTimerView.enableWarningOutOfRestTime(mCurrentStep != Pomodoro.WORKING);
         mCountDownTimerView.startCountDown();
         ringTheBell();
-        callNotification();
+    }
+
+    @Override
+    protected void onDestroy() {
+        cancelNotification();
+        mCountDownTimerView.stopCountDown();
+        unregisterReceiver(receiver);
+        super.onDestroy();
     }
 
     @Override
@@ -201,24 +221,63 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    BroadcastReceiver receiver;
+    private void initBroadcastReceiver() {
+        IntentFilter filter = new IntentFilter(ACTION_STOP);
+        //tạo bộ lắng nghe
+        receiver = new BroadcastReceiver() {
+            //chú ý là dữ liệu trong tin nhắn được lưu trữ trong arg1
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                processReceive(context, intent);
+            }
+        };
 
-    private void callNotification() {
+        //đăng ký bộ lắng nghe vào hệ thống
+        registerReceiver(receiver, filter);
+    }
+
+    private void processReceive(Context context, Intent intent) {
+        Toast.makeText(context, "STOP pomorodo", Toast.LENGTH_SHORT).show();
+        mCountDownTimerView.stopCountDown();
+        cancelNotification();
+    }
+
+    private void initNotification() {
+        Intent intent = new Intent(this, MainActivity.class);
+//        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+
+        Intent intentStop = new Intent(this, MainActivity.class);
+        intentStop.setAction(ACTION_STOP);
+        intentStop.putExtra(EXTRA_NOTIFICATION_ID, NOTIFICATION_ID);
+        PendingIntent stopPendingIntent = PendingIntent.getBroadcast(this, 0, intentStop, 0);
+
+
         notificationManagerCompat = NotificationManagerCompat.from(this);
         builder = new NotificationCompat.Builder(this, "channel");
         builder.setContentTitle(mCurrentStep.name())
                 .setContentText("progress")
                 .setSmallIcon(R.mipmap.ic_launcher)
+//                .setContentIntent(pendingIntent)
+                .setColor(getResources().getColor(R.color.colorPrimary))
+//                .setAutoCancel(true)
+                .addAction(R.drawable.ic_selected, getString(R.string.text_stop), stopPendingIntent)
                 .setPriority(NotificationCompat.PRIORITY_HIGH);
 
         builder.setProgress(100, 0, false);
-        notificationManagerCompat.notify(NOTIFICATION_ID, builder.build());
-
     }
 
     private void updateTimerProgress(String remainTime, int progress) {
         builder.setProgress(100, progress, false);
         String[] temp = remainTime.split(":");
         builder.setContentText("remain: " + temp[0] + "m" + temp[1] + "s " + progress + "%");
+        builder.setContentTitle(mCurrentStep.name());
         notificationManagerCompat.notify(NOTIFICATION_ID, builder.build());
+    }
+
+    private void cancelNotification() {
+//        if(notificationManagerCompat != null)
+            notificationManagerCompat.cancel(NOTIFICATION_ID);
     }
 }

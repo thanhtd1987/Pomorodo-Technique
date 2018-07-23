@@ -108,10 +108,12 @@ public class CircleCountDownTimer extends RelativeLayout implements CountDownTim
 
     @Override
     public void stopCountDown() {
-        mCountDownTimer.cancel();
-        mCountDownTimer = null;
-        resetTimer();
-        mCallback.onStopCountDown();
+        if(mCountDownTimer != null) {
+            mCountDownTimer.cancel();
+            mCountDownTimer = null;
+            resetTimer();
+            mCallback.onStopCountDown();
+        }
     }
 
     @Override
