@@ -58,21 +58,33 @@ public class TasksAdapter extends RecyclerView.Adapter {
     }
 
     public void addTask(Task task) {
-        //TODO: add 1 task
+        if (mSelectedView == null)
+            task.setOnDoing(true);
+        mTasks.add(task);
+        notifyDataSetChanged();
     }
 
     public void clearAllTasks() {
         mTasks.clear();
+        mSelectedView = null;
         notifyDataSetChanged();
     }
 
-    private class TaskViewHolder extends RecyclerView.ViewHolder {
-        TextView tvTaskName;
-        CheckBox cbTaskStatus;
-        ImageView ivDoingTask;
-        ImageView ivDelete;
+    public Task getSelectedTask() {
+        for (Task task : mTasks) {
+            if (task.isOnDoing())
+                return task;
+        }
+        return null;
+    }
 
-        Task mTask;
+    private class TaskViewHolder extends RecyclerView.ViewHolder {
+        private TextView tvTaskName;
+        private CheckBox cbTaskStatus;
+        private ImageView ivDoingTask;
+        private ImageView ivDelete;
+
+        private Task mTask;
 
         public TaskViewHolder(View itemView) {
             super(itemView);
@@ -100,7 +112,7 @@ public class TasksAdapter extends RecyclerView.Adapter {
 
             cbTaskStatus.setOnCheckedChangeListener((compoundButton, isChecked) -> {
                 mTask.setDone(isChecked);
-                itemView.setBackgroundColor(isChecked ? itemView.getContext().getColor(R.color.disable_color) : bgColor);
+                itemView.setBackgroundColor(isChecked ? itemView.getContext().getResources().getColor(R.color.disable_color) : bgColor);
                 if (isChecked && mTask.isOnDoing()) {
                     setSelectedTask(false);
                     if (autoSelectNextTask()) {
@@ -134,10 +146,11 @@ public class TasksAdapter extends RecyclerView.Adapter {
             cbTaskStatus.setChecked(task.isDone());
             if (task.isOnDoing())
                 mSelectedView = this;
+            setSelectedTask(task.isOnDoing());
         }
 
         void setSelectedTask(boolean isSelected) {
-            ivDoingTask.setImageResource(isSelected ? R.drawable.ic_selected : null);
+            ivDoingTask.setImageResource(isSelected ? R.drawable.ic_selected : android.R.color.transparent);
             mTask.setOnDoing(isSelected);
         }
     }

@@ -6,13 +6,18 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.Gravity;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.funwolrd.pomodorotechnique.R;
+import com.funwolrd.pomodorotechnique.common.Utils;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -24,20 +29,39 @@ public class TaskListDialog extends Dialog implements View.OnClickListener {
     private TasksAdapter mAdapter;
     TextView tvAdd, tvClearAll, tvOk;
     ImageView ivClose;
+    EditText etAddTask;
 
     List<Task> tasks;
+    TasksDialogListener mListener;
 
     public TaskListDialog(@NonNull Context context) {
         super(context);
     }
 
+    public TaskListDialog setListener(TasksDialogListener listener) {
+        mListener = listener;
+        return this;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.dialog_tasks);
 
+        initDialogProperties();
         initView();
         initAction();
+    }
+
+    private void initDialogProperties() {
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        setContentView(R.layout.dialog_tasks);
+        WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams();
+        layoutParams.copyFrom(getWindow().getAttributes());
+        layoutParams.width = WindowManager.LayoutParams.MATCH_PARENT;
+        layoutParams.height = WindowManager.LayoutParams.MATCH_PARENT;
+        layoutParams.gravity = Gravity.CENTER;
+        getWindow().setAttributes(layoutParams);
     }
 
     void initView() {
@@ -46,12 +70,23 @@ public class TaskListDialog extends Dialog implements View.OnClickListener {
         tvClearAll = findViewById(R.id.tv_clear_tasks);
         tvOk = findViewById(R.id.btn_select_task);
         ivClose = findViewById(R.id.iv_close);
+        etAddTask = findViewById(R.id.et_add_task_name);
 
-        tasks = getSavedTasks();
+        tasks = Task.getSavedTasks(getContext());
         mAdapter = new TasksAdapter(tasks);
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
         rcvTasks.setLayoutManager(layoutManager);
         rcvTasks.setAdapter(mAdapter);
+
+        etAddTask.setImeActionLabel("Add", EditorInfo.IME_ACTION_DONE);
+        etAddTask.setOnEditorActionListener((textView, imeAction, keyEvent) -> {
+            if (imeAction == EditorInfo.IME_ACTION_DONE) {
+                addTask(textView.getText().toString());
+                return true;
+            }
+
+            return false;
+        });
     }
 
     void initAction() {
@@ -61,28 +96,37 @@ public class TaskListDialog extends Dialog implements View.OnClickListener {
         ivClose.setOnClickListener(this);
     }
 
-    private List<Task> getSavedTasks() {
-        List<Task> list = new ArrayList<>();
-        //TODO: get from SharePreference as String & parse
-        return list;
+    private void addTask(String taskName) {
+        if (taskName.trim().isEmpty())
+            return;
+        Utils.hideKeyboard(getContext(), etAddTask);
+        Task task = new Task(taskName);
+        mAdapter.addTask(task);
+        etAddTask.setText("");
     }
 
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.tv_add_task:
-                //TODO: add task with simple dialog
+                addTask(etAddTask.getText().toString());
                 break;
             case R.id.tv_clear_tasks:
-                //TODO: clear all of tasks
+                mAdapter.clearAllTasks();
                 break;
             case R.id.btn_select_task:
-                //TODO: return the selected task name
+                mListener.onDismiss(mAdapter.getSelectedTask());
+                Task.saveTaskList(getContext(), tasks);
+                dismiss();
                 break;
             case R.id.iv_close:
-                //TODO: close dialog
+                dismiss();
                 break;
         }
 
+    }
+
+    public interface TasksDialogListener {
+        void onDismiss(Task task);
     }
 }

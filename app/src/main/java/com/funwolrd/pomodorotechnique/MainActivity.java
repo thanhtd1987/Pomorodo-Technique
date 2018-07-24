@@ -20,6 +20,10 @@ import android.widget.Toast;
 
 import com.funwolrd.pomodorotechnique.common.views.CircleCountDownTimer;
 import com.funwolrd.pomodorotechnique.common.views.CountDownTimerView;
+import com.funwolrd.pomodorotechnique.task.Task;
+import com.funwolrd.pomodorotechnique.task.TaskListDialog;
+
+import java.util.List;
 
 import static android.app.Notification.EXTRA_NOTIFICATION_ID;
 
@@ -34,7 +38,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final String ACTION_STOP = "action_stop";
 
     //setting
-    private boolean isNoSound = true;
+    private boolean isNoSound = false;
 
     private enum ProcessStatus {
         STARTED,
@@ -47,7 +51,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         TEA_BREAK(15);
 
         private int value;
-        private boolean debug = true;
+        private boolean debug = false;
 
         Pomodoro(int value) {
             if (debug)
@@ -111,14 +115,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.iv_next_task:
-                //TODO: get next task in task list + assign for tvTaskName
+                setCurrentTask(getNextTask());
                 break;
             case R.id.iv_task_list:
-                //TODO: open task list + select Task
+                new TaskListDialog(this)
+                        .setListener(task -> {
+                            setCurrentTask(task);
+                        }).show();
                 break;
             case R.id.btn_start:
                 runPomodoroProcess();
                 break;
+        }
+    }
+
+    private void setCurrentTask(Task task) {
+        if(task == null) {
+            etTaskName.setText(R.string.text_no_task);
+        } else {
+            etTaskName.setText(task.getTaskName());
         }
     }
 
@@ -185,7 +200,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onDestroy() {
         cancelNotification();
         mCountDownTimerView.stopCountDown();
-        unregisterReceiver(receiver);
+        if (receiver != null)
+            unregisterReceiver(receiver);
         super.onDestroy();
     }
 
@@ -219,6 +235,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
             mp.start();
         }
+    }
+
+    private Task getNextTask() {
+        List<Task> tasks = Task.getSavedTasks(this);
+        for(Task task: tasks){
+            if(task.isOnDoing()) {
+                if(etTaskName.getText().toString().equals(getString(R.string.text_no_task)))
+                    return task;
+                task.setDone(true);
+                task.setOnDoing(false);
+                break;
+            }
+        }
+        for(Task task: tasks){
+            if(!task.isDone()) {
+                task.setOnDoing(true);
+                Task.saveTaskList(this, tasks);
+                return task;
+            }
+        }
+        Task.saveTaskList(this, tasks);
+        return null;
     }
 
     BroadcastReceiver receiver;
@@ -277,7 +315,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void cancelNotification() {
-//        if(notificationManagerCompat != null)
+        if(notificationManagerCompat != null)
             notificationManagerCompat.cancel(NOTIFICATION_ID);
     }
 }

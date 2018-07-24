@@ -5,4 +5,5 @@
     <string name="text_ready">Be ready!!</string>
     <string name="text_start">START</string>
     <string name="text_stop">STOP</string>
+    <string name="text_no_task">Do something...</string>
 </resources>

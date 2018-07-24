@@ -5,7 +5,8 @@
     android:layout_height="match_parent"
     android:background="@color/colorBackground"
     android:padding="10dp"
-    tools:context=".MainActivity">
+    tools:context=".MainActivity"
+    android:focusableInTouchMode="true">
 
     <TextView
         android:id="@+id/tv_task"
@@ -23,7 +24,7 @@
         android:layout_height="wrap_content"
         android:layout_toLeftOf="@id/iv_next_task"
         android:layout_toRightOf="@+id/tv_task"
-        android:text="do something"
+        android:text="@string/text_no_task"
         android:textColor="@color/colorYellow" />
 
     <ImageView

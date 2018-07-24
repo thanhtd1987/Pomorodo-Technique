@@ -1,5 +1,13 @@
 package com.funwolrd.pomodorotechnique.common;
 
+import android.content.Context;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import java.lang.reflect.Modifier;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -32,5 +40,18 @@ public class Utils {
 
     public static boolean isInWarningTime(long time, int warningTimeInSecond) {
         return TimeUnit.SECONDS.toMillis(warningTimeInSecond) >= time;
+    }
+
+    public static Gson getGson() {
+        GsonBuilder builder = new GsonBuilder();
+        builder.excludeFieldsWithModifiers(Modifier.FINAL, Modifier.TRANSIENT, Modifier.STATIC);
+        return builder.create();
+    }
+
+    public static void hideKeyboard(Context context, EditText editText) {
+        InputMethodManager inputMethodManager = (InputMethodManager)
+                context.getSystemService(Context.INPUT_METHOD_SERVICE);
+        // Hide the soft keyboard
+        inputMethodManager.hideSoftInputFromWindow(editText.getWindowToken(), 0);
     }
 }
