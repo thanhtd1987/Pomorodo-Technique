@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final int NOTIFICATION_ID = 111;
     private final String ACTION_STOP = "action_stop";
 
+    //TODO : build function for settings: sound, vibrate, tea break's time
     //setting
     private boolean isNoSound = false;
 
@@ -119,9 +120,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.iv_task_list:
                 new TaskListDialog(this)
-                        .setListener(task -> {
-                            setCurrentTask(task);
-                        }).show();
+                        .setListener(task -> setCurrentTask(task))
+                        .show();
                 break;
             case R.id.btn_start:
                 runPomodoroProcess();
@@ -259,6 +259,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return null;
     }
 
+    //TODO : separate Push notification to other file
+
     BroadcastReceiver receiver;
     private void initBroadcastReceiver() {
         IntentFilter filter = new IntentFilter(ACTION_STOP);
@@ -285,11 +287,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Intent intent = new Intent(this, MainActivity.class);
 //        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        //fixme : open current activity
 
         Intent intentStop = new Intent(this, MainActivity.class);
         intentStop.setAction(ACTION_STOP);
         intentStop.putExtra(EXTRA_NOTIFICATION_ID, NOTIFICATION_ID);
         PendingIntent stopPendingIntent = PendingIntent.getBroadcast(this, 0, intentStop, 0);
+        //fixme : action of stop from push
 
 
         notificationManagerCompat = NotificationManagerCompat.from(this);
@@ -304,6 +308,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .setPriority(NotificationCompat.PRIORITY_HIGH);
 
         builder.setProgress(100, 0, false);
+
+        //TODO : recheck display push condition
     }
 
     private void updateTimerProgress(String remainTime, int progress) {
