@@ -1,31 +1,25 @@
 package com.funwolrd.pomodorotechnique;
 
-import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.funwolrd.pomodorotechnique.common.views.CircleCountDownTimer;
 import com.funwolrd.pomodorotechnique.common.views.CountDownTimerView;
+import com.funwolrd.pomodorotechnique.notification.NotificationController;
+import com.funwolrd.pomodorotechnique.notification.PomorodoReceiver;
 import com.funwolrd.pomodorotechnique.task.Task;
 import com.funwolrd.pomodorotechnique.task.TaskListDialog;
 
 import java.util.List;
-
-import static android.app.Notification.EXTRA_NOTIFICATION_ID;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, CountDownTimerView.CountDownCallback {
 
@@ -35,11 +29,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final int TEA_BREAK_TIME_25 = 25 * SECOND_IN_MINUTE;
     private final int TEA_BREAK_TIME_30 = 30 * SECOND_IN_MINUTE;
     private final int NOTIFICATION_ID = 111;
-    private final String ACTION_STOP = "action_stop";
+
 
     //TODO : build function for settings: sound, vibrate, tea break's time
     //setting
-    private boolean isNoSound = false;
+    private boolean isNoSound = true;
 
     private enum ProcessStatus {
         STARTED,
@@ -73,9 +67,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView tvCount, tvNextStep;
     private CountDownTimerView mCountDownTimerView;
 
-    NotificationManagerCompat notificationManagerCompat;
-    NotificationCompat.Builder builder;
-
+    private NotificationController mNotificationController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +78,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         initViews();
         initListeners();
+        initBroadcastReceiver();
+        initNotificationController();
     }
 
     private void initViews() {
@@ -129,8 +123,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d("DEUBG", "onResume: vào");
+    }
+
+    @Override
+    protected void onDestroy() {
+        mNotificationController.cancelNotification();
+        mCountDownTimerView.stopCountDown();
+        if (receiver != null)
+            unregisterReceiver(receiver);
+        super.onDestroy();
+    }
+
     private void setCurrentTask(Task task) {
-        if(task == null) {
+        if (task == null) {
             etTaskName.setText(R.string.text_no_task);
         } else {
             etTaskName.setText(task.getTaskName());
@@ -161,12 +170,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mProcessStatus = ProcessStatus.STARTED;
             doNextStep();
             mCountDownTimerView.startCountDown();
-            initNotification();
-            initBroadcastReceiver();
+            mNotificationController.sendNotification();
         } else {
             mProcessStatus = ProcessStatus.STOPPED;
             mCountDownTimerView.stopCountDown();
-            cancelNotification();
+            mNotificationController.cancelNotification();
             unregisterReceiver(receiver);
         }
     }
@@ -197,15 +205,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    protected void onDestroy() {
-        cancelNotification();
-        mCountDownTimerView.stopCountDown();
-        if (receiver != null)
-            unregisterReceiver(receiver);
-        super.onDestroy();
-    }
-
-    @Override
     public void onStartCountDown() {
         onChangePomorodoProcess(true);
     }
@@ -222,7 +221,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onCountDown(String remainTime, int progress) {
-        updateTimerProgress(remainTime, progress);
+        mNotificationController.updateTimerProgress(remainTime, progress);
     }
 
     /**
@@ -239,17 +238,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private Task getNextTask() {
         List<Task> tasks = Task.getSavedTasks(this);
-        for(Task task: tasks){
-            if(task.isOnDoing()) {
-                if(etTaskName.getText().toString().equals(getString(R.string.text_no_task)))
+        for (Task task : tasks) {
+            if (task.isOnDoing()) {
+                if (etTaskName.getText().toString().equals(getString(R.string.text_no_task)))
                     return task;
                 task.setDone(true);
                 task.setOnDoing(false);
                 break;
             }
         }
-        for(Task task: tasks){
-            if(!task.isDone()) {
+        for (Task task : tasks) {
+            if (!task.isDone()) {
                 task.setOnDoing(true);
                 Task.saveTaskList(this, tasks);
                 return task;
@@ -261,67 +260,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     //TODO : separate Push notification to other file
 
-    BroadcastReceiver receiver;
-    private void initBroadcastReceiver() {
-        IntentFilter filter = new IntentFilter(ACTION_STOP);
-        //tạo bộ lắng nghe
-        receiver = new BroadcastReceiver() {
-            //chú ý là dữ liệu trong tin nhắn được lưu trữ trong arg1
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                processReceive(context, intent);
-            }
-        };
+    PomorodoReceiver receiver;
 
-        //đăng ký bộ lắng nghe vào hệ thống
+    private void initBroadcastReceiver() {
+        IntentFilter filter = new IntentFilter(PomorodoReceiver.ACTION_STOP);
+//        PomorodoReceiver.BroadcastCallback callback = () -> processReceive();
+        receiver = new PomorodoReceiver();
+//        receiver.setCallback(callback);
+
         registerReceiver(receiver, filter);
     }
 
-    private void processReceive(Context context, Intent intent) {
-        Toast.makeText(context, "STOP pomorodo", Toast.LENGTH_SHORT).show();
+    private void processReceive() {
         mCountDownTimerView.stopCountDown();
-        cancelNotification();
+        mNotificationController.cancelNotification();
     }
 
-    private void initNotification() {
-        Intent intent = new Intent(this, MainActivity.class);
-//        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
-        //fixme : open current activity
-
-        Intent intentStop = new Intent(this, MainActivity.class);
-        intentStop.setAction(ACTION_STOP);
-        intentStop.putExtra(EXTRA_NOTIFICATION_ID, NOTIFICATION_ID);
-        PendingIntent stopPendingIntent = PendingIntent.getBroadcast(this, 0, intentStop, 0);
-        //fixme : action of stop from push
-
-
-        notificationManagerCompat = NotificationManagerCompat.from(this);
-        builder = new NotificationCompat.Builder(this, "channel");
-        builder.setContentTitle(mCurrentStep.name())
-                .setContentText("progress")
-                .setSmallIcon(R.mipmap.ic_launcher)
-//                .setContentIntent(pendingIntent)
-                .setColor(getResources().getColor(R.color.colorPrimary))
-//                .setAutoCancel(true)
-                .addAction(R.drawable.ic_selected, getString(R.string.text_stop), stopPendingIntent)
-                .setPriority(NotificationCompat.PRIORITY_HIGH);
-
-        builder.setProgress(100, 0, false);
-
-        //TODO : recheck display push condition
+    private void initNotificationController() {
+        String title = mCurrentStep.name() + "-" + etTaskName.getText().toString();
+        mNotificationController = new NotificationController(this, NOTIFICATION_ID, title);
     }
 
-    private void updateTimerProgress(String remainTime, int progress) {
-        builder.setProgress(100, progress, false);
-        String[] temp = remainTime.split(":");
-        builder.setContentText("remain: " + temp[0] + "m" + temp[1] + "s " + progress + "%");
-        builder.setContentTitle(mCurrentStep.name());
-        notificationManagerCompat.notify(NOTIFICATION_ID, builder.build());
-    }
-
-    private void cancelNotification() {
-        if(notificationManagerCompat != null)
-            notificationManagerCompat.cancel(NOTIFICATION_ID);
-    }
 }
