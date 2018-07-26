@@ -17,6 +17,7 @@
             </intent-filter>
         </activity>
         <receiver android:name=".notification.PomorodoReceiver"/>
+        <service android:name=".notification.NotificationService" />
     </application>
 
 </manifest>

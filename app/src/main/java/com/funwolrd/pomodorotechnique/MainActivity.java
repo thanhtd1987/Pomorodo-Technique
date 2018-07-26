@@ -1,11 +1,13 @@
 package com.funwolrd.pomodorotechnique;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
@@ -15,6 +17,7 @@ import android.widget.TextView;
 import com.funwolrd.pomodorotechnique.common.views.CircleCountDownTimer;
 import com.funwolrd.pomodorotechnique.common.views.CountDownTimerView;
 import com.funwolrd.pomodorotechnique.notification.NotificationController;
+import com.funwolrd.pomodorotechnique.notification.NotificationService;
 import com.funwolrd.pomodorotechnique.notification.PomorodoReceiver;
 import com.funwolrd.pomodorotechnique.task.Task;
 import com.funwolrd.pomodorotechnique.task.TaskListDialog;
@@ -68,6 +71,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private CountDownTimerView mCountDownTimerView;
 
     private NotificationController mNotificationController;
+    BroadcastReceiver receiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         tvCount = findViewById(R.id.tv_count);
         tvNextStep = findViewById(R.id.tv_next_step);
 
-        updateView(getString(R.string.text_ready));
+        updateCurrentStep(getString(R.string.text_ready));
     }
 
     private void initListeners() {
@@ -99,6 +103,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ivNextTask.setOnClickListener(this);
         ivTaskList.setOnClickListener(this);
         btnStart.setOnClickListener(this);
+    }
+
+    private void initBroadcastReceiver() {
+        IntentFilter filter = new IntentFilter(PomorodoReceiver.ACTION_STOP);
+
+        receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                switch (intent.getAction()) {
+                    case PomorodoReceiver.ACTION_STOP:
+                        processReceive();
+                        break;
+                    case PomorodoReceiver.ACTION_START:
+                        break;
+                }
+            }
+        };
+
+        registerReceiver(receiver, filter);
+    }
+
+    private void initNotificationController() {
+        mNotificationController = new NotificationController(this, NOTIFICATION_ID, etTaskName.getText().toString());
+    }
+
+    private void processReceive() {
+        mCountDownTimerView.stopCountDown();
+        mNotificationController.cancelNotification();
     }
 
     /**
@@ -110,11 +142,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.iv_next_task:
-                setCurrentTask(getNextTask());
+                setCurrentTaskName(getNextTask());
                 break;
             case R.id.iv_task_list:
                 new TaskListDialog(this)
-                        .setListener(task -> setCurrentTask(task))
+                        .setListener(task -> setCurrentTaskName(task))
                         .show();
                 break;
             case R.id.btn_start:
@@ -126,7 +158,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d("DEUBG", "onResume: vào");
+//        Log.d("DEUBG", "onResume: vào");
     }
 
     @Override
@@ -135,10 +167,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mCountDownTimerView.stopCountDown();
         if (receiver != null)
             unregisterReceiver(receiver);
+        stopService(new Intent(this, NotificationService.class));
         super.onDestroy();
     }
 
-    private void setCurrentTask(Task task) {
+    private void setCurrentTaskName(Task task) {
         if (task == null) {
             etTaskName.setText(R.string.text_no_task);
         } else {
@@ -146,7 +179,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void updateView(String nextStep) {
+    private void updateCurrentStep(String nextStep) {
         tvCount.setText(String.format(getString(R.string.text_working_time), mPomodoroLapCount));
         tvNextStep.setText(String.format(getString(R.string.text_next_step), nextStep));
     }
@@ -155,7 +188,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (!isStart) {
             mPomodoroLapCount = 0;
             mCurrentStep = Pomodoro.SHORT_BREAK;
-            updateView(getString(R.string.text_ready));
+            updateCurrentStep(getString(R.string.text_ready));
         }
         btnStart.setText(isStart ? getString(R.string.text_stop) : getString(R.string.text_start));
         btnStart.setSelected(isStart);
@@ -171,11 +204,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             doNextStep();
             mCountDownTimerView.startCountDown();
             mNotificationController.sendNotification();
+            startService(new Intent(this, NotificationService.class).setAction(PomorodoReceiver.ACTION_START));
         } else {
             mProcessStatus = ProcessStatus.STOPPED;
             mCountDownTimerView.stopCountDown();
             mNotificationController.cancelNotification();
-            unregisterReceiver(receiver);
         }
     }
 
@@ -197,7 +230,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 etTaskName.setEnabled(true);
                 break;
         }
-        updateView(nextStep.name());
+        updateCurrentStep(nextStep.name());
         mCountDownTimerView.setTimerInSecond(mCurrentStep.value);
         mCountDownTimerView.enableWarningOutOfRestTime(mCurrentStep != Pomodoro.WORKING);
         mCountDownTimerView.startCountDown();
@@ -221,7 +254,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onCountDown(String remainTime, int progress) {
-        mNotificationController.updateTimerProgress(remainTime, progress);
+        String title = mCurrentStep == Pomodoro.WORKING ? etTaskName.getText().toString() : "Break time!";
+        mNotificationController.updateTimerProgress(title, remainTime, progress);
     }
 
     /**
@@ -260,25 +294,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     //TODO : separate Push notification to other file
 
-    PomorodoReceiver receiver;
-
-    private void initBroadcastReceiver() {
-        IntentFilter filter = new IntentFilter(PomorodoReceiver.ACTION_STOP);
-//        PomorodoReceiver.BroadcastCallback callback = () -> processReceive();
-        receiver = new PomorodoReceiver();
-//        receiver.setCallback(callback);
-
-        registerReceiver(receiver, filter);
-    }
-
-    private void processReceive() {
-        mCountDownTimerView.stopCountDown();
-        mNotificationController.cancelNotification();
-    }
-
-    private void initNotificationController() {
-        String title = mCurrentStep.name() + "-" + etTaskName.getText().toString();
-        mNotificationController = new NotificationController(this, NOTIFICATION_ID, title);
-    }
 
 }

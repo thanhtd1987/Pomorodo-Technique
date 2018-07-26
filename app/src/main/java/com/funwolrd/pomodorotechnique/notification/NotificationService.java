@@ -9,26 +9,23 @@ import android.support.annotation.Nullable;
  */
 public class NotificationService extends IntentService {
 
-    private final String NOTIFICATION_SERVICE_ID = "notification_service";
-    private final int NOTIFICATION_ID = 111;
-
-    private NotificationController mNotificationController;
-
     public NotificationService() {
         super("notification_service");
     }
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
+        if (intent.getAction() == null) return;
         String action = intent.getAction();
+        Intent stopIntent = new Intent();
         switch (action) {
-            case "":
+            case PomorodoReceiver.ACTION_STOP:
+                stopIntent.setAction(action);
+                break;
+            case PomorodoReceiver.ACTION_START:
+                stopIntent.setAction(action);
                 break;
         }
-    }
-
-    private void initNotificationController(String title) {
-//        String title = mCurrentStep.name() + "-" + etTaskName.getText().toString();
-        mNotificationController = new NotificationController(this, NOTIFICATION_ID, title);
+        sendBroadcast(stopIntent);
     }
 }

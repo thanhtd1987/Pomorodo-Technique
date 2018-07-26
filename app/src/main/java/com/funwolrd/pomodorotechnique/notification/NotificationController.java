@@ -52,10 +52,10 @@ public class NotificationController {
     }
 
     private void addAction() {
-        Intent intentStop = new Intent(mContext, PomorodoReceiver.class);
+        Intent intentStop = new Intent(mContext, NotificationService.class);
         intentStop.setAction(PomorodoReceiver.ACTION_STOP);
-        intentStop.putExtra(EXTRA_NOTIFICATION_ID, mNotificationId);
-        PendingIntent stopPendingIntent = PendingIntent.getBroadcast(mContext, 0, intentStop, PendingIntent.FLAG_UPDATE_CURRENT);
+//        intentStop.putExtra(EXTRA_NOTIFICATION_ID, mNotificationId);
+        PendingIntent stopPendingIntent = PendingIntent.getService(mContext, 0, intentStop, PendingIntent.FLAG_UPDATE_CURRENT);
 
         builder.addAction(R.drawable.ic_selected, mContext.getString(R.string.text_stop), stopPendingIntent);
     }
@@ -64,11 +64,11 @@ public class NotificationController {
         notificationManagerCompat.notify(mNotificationId, builder.build());
     }
 
-    public void updateTimerProgress(String remainTime, int progress) {
+    public void updateTimerProgress(String title, String remainTime, int progress) {
         builder.setProgress(100, progress, false);
         String[] temp = remainTime.split(":");
         builder.setContentText("remain: " + temp[0] + "m" + temp[1] + "s " + progress + "%");
-        builder.setContentTitle(mTitle);
+        builder.setContentTitle(title);
 
         sendNotification();
     }
