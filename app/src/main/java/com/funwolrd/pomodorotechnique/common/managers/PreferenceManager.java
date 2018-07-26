@@ -10,6 +10,7 @@ public class PreferenceManager {
 
     private final String SHARE_PREFERENCE_NAME = "share_preference";
     private final String KEY_TASKS = "task_list";
+    private final String KEY_SETTING = "setting";
 
     private static PreferenceManager sPreferenceManager;
     private SharedPreferences mSharedPreferences;
@@ -31,5 +32,13 @@ public class PreferenceManager {
 
     public String getTaskList() {
         return mSharedPreferences.getString(KEY_TASKS, "[]");
+    }
+
+    public void saveSetting(String jsonSetting) {
+        mSharedPreferences.edit().putString(KEY_SETTING, jsonSetting).apply();
+    }
+
+    public String getSetting() {
+        return mSharedPreferences.getString(KEY_SETTING, "{}");
     }
 }

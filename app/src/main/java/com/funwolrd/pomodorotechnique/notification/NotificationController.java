@@ -3,13 +3,12 @@ package com.funwolrd.pomodorotechnique.notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 
-import com.funwolrd.pomodorotechnique.MainActivity;
+import com.funwolrd.pomodorotechnique.main.MainActivity;
 import com.funwolrd.pomodorotechnique.R;
-
-import static android.app.Notification.EXTRA_NOTIFICATION_ID;
 
 /**
  * Created by ThanhTD on 7/25/2018.
@@ -76,5 +75,10 @@ public class NotificationController {
     public void cancelNotification() {
         if(notificationManagerCompat != null)
             notificationManagerCompat.cancel(mNotificationId);
+    }
+
+    public void enableVibrate(boolean enable) {
+        if (Build.VERSION.SDK_INT >= 21)
+            builder.setVibrate(enable ? new long[0] : null);
     }
 }

@@ -1,4 +1,4 @@
-package com.funwolrd.pomodorotechnique;
+package com.funwolrd.pomodorotechnique.main;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -14,6 +14,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.funwolrd.pomodorotechnique.R;
 import com.funwolrd.pomodorotechnique.common.views.CircleCountDownTimer;
 import com.funwolrd.pomodorotechnique.common.views.CountDownTimerView;
 import com.funwolrd.pomodorotechnique.notification.NotificationController;
@@ -26,13 +27,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, CountDownTimerView.CountDownCallback {
 
-    private static final int SECOND_IN_MINUTE = 60;
-    private final int DELAY_TIME_SECOND = 5;
-    private final int TEA_BREAK_TIME_20 = 20 * SECOND_IN_MINUTE;
-    private final int TEA_BREAK_TIME_25 = 25 * SECOND_IN_MINUTE;
-    private final int TEA_BREAK_TIME_30 = 30 * SECOND_IN_MINUTE;
     private final int NOTIFICATION_ID = 111;
-
 
     //TODO : build function for settings: sound, vibrate, tea break's time
     //setting
@@ -41,22 +36,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private enum ProcessStatus {
         STARTED,
         STOPPED
-    }
-
-    private enum Pomodoro {
-        WORKING(25),
-        SHORT_BREAK(5),
-        TEA_BREAK(15);
-
-        private int value;
-        private boolean debug = false;
-
-        Pomodoro(int value) {
-            if (debug)
-                this.value = value;
-            else
-                this.value = value * SECOND_IN_MINUTE;
-        }
     }
 
     private ProcessStatus mProcessStatus = ProcessStatus.STOPPED;
@@ -231,6 +210,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
         }
         updateCurrentStep(nextStep.name());
+        mNotificationController.enableVibrate(true);
         mCountDownTimerView.setTimerInSecond(mCurrentStep.value);
         mCountDownTimerView.enableWarningOutOfRestTime(mCurrentStep != Pomodoro.WORKING);
         mCountDownTimerView.startCountDown();
@@ -256,6 +236,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onCountDown(String remainTime, int progress) {
         String title = mCurrentStep == Pomodoro.WORKING ? etTaskName.getText().toString() : "Break time!";
         mNotificationController.updateTimerProgress(title, remainTime, progress);
+        mNotificationController.enableVibrate(false);
     }
 
     /**

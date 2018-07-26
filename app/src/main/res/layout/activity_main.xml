@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@color/colorBackground"
     android:padding="10dp"
-    tools:context=".MainActivity"
+    tools:context=".main.MainActivity"
     android:focusableInTouchMode="true">
 
     <TextView
