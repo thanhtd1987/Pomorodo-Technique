@@ -35,7 +35,7 @@
         android:layout_alignTop="@id/et_task_name"
         android:layout_toLeftOf="@id/iv_task_list"
         android:paddingLeft="5dp"
-        android:src="@android:drawable/ic_media_ff" />
+        android:src="@drawable/ic_next_task" />
 
     <ImageView
         android:id="@+id/iv_task_list"
@@ -45,7 +45,7 @@
         android:layout_alignParentRight="true"
         android:layout_alignTop="@id/et_task_name"
         android:paddingLeft="5dp"
-        android:src="@android:drawable/ic_dialog_dialer" />
+        android:src="@drawable/ic_list_task" />
 
     <com.funwolrd.pomodorotechnique.common.views.CircleCountDownTimer
         android:id="@+id/circle_count_down_timer"
