@@ -171,7 +171,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         btnStart.setText(isStart ? getString(R.string.text_stop) : getString(R.string.text_start));
         btnStart.setSelected(isStart);
-        btnStart.setTextColor(isStart ? getResources().getColor(R.color.colorYellow) : getResources().getColor(R.color.colorPrimaryDark));
+        btnStart.setTextColor(isStart ? getResources().getColor(R.color.colorYellow)
+                : getResources().getColor(R.color.colorPrimaryDark));
     }
 
     /**
@@ -210,7 +211,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
         }
         updateCurrentStep(nextStep.name());
-        mNotificationController.enableVibrate(true);
+        mNotificationController.enableOnceTimeFunctions(true);
         mCountDownTimerView.setTimerInSecond(mCurrentStep.value);
         mCountDownTimerView.enableWarningOutOfRestTime(mCurrentStep != Pomodoro.WORKING);
         mCountDownTimerView.startCountDown();
@@ -236,7 +237,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onCountDown(String remainTime, int progress) {
         String title = mCurrentStep == Pomodoro.WORKING ? etTaskName.getText().toString() : "Break time!";
         mNotificationController.updateTimerProgress(title, remainTime, progress);
-        mNotificationController.enableVibrate(false);
+        mNotificationController.enableOnceTimeFunctions(false);
     }
 
     /**
