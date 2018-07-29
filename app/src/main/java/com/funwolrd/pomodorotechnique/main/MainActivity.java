@@ -27,9 +27,14 @@ import com.funwolrd.pomodorotechnique.task.TaskListDialog;
 
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, CountDownTimerView.CountDownCallback {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener,
+        CountDownTimerView.CountDownCallback {
 
     private final int NOTIFICATION_ID = 111;
+
+    //TODO : add UI for quick setting
+
+    //TODO : add option menu for action bar
 
     //TODO : build function for settings: sound, vibrate, tea break's time ( quick / menu setting)
     //setting
