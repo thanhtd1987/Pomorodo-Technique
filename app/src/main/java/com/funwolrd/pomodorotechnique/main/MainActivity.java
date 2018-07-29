@@ -7,12 +7,14 @@ import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.funwolrd.pomodorotechnique.R;
 import com.funwolrd.pomodorotechnique.common.views.CircleCountDownTimer;
@@ -29,7 +31,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private final int NOTIFICATION_ID = 111;
 
-    //TODO : build function for settings: sound, vibrate, tea break's time
+    //TODO : build function for settings: sound, vibrate, tea break's time ( quick / menu setting)
     //setting
     private boolean isNoSound = true;
 
@@ -41,6 +43,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ProcessStatus mProcessStatus = ProcessStatus.STOPPED;
     private Pomodoro mCurrentStep = Pomodoro.SHORT_BREAK;
     private int mPomodoroLapCount = 0;
+    private boolean doubleBackToExit = false;
 
     private EditText etTaskName;
     private ImageView ivNextTask;
@@ -148,6 +151,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             unregisterReceiver(receiver);
         stopService(new Intent(this, NotificationService.class));
         super.onDestroy();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (doubleBackToExit) {
+            super.onBackPressed();
+            return;
+        }
+        doubleBackToExit = true;
+        Toast.makeText(this, "Double press back to exit", Toast.LENGTH_SHORT).show();
+
+        new Handler().postDelayed(() -> doubleBackToExit = false, 2000);
     }
 
     private void setCurrentTaskName(Task task) {
