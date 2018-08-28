@@ -56,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView btnStart;
     private TextView tvCount, tvNextStep;
     private CountDownTimerView mCountDownTimerView;
+    private ImageView mSoundSetting;
 
     private NotificationController mNotificationController;
     BroadcastReceiver receiver;
@@ -81,6 +82,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnStart = findViewById(R.id.btn_start);
         tvCount = findViewById(R.id.tv_count);
         tvNextStep = findViewById(R.id.tv_next_step);
+        mSoundSetting = findViewById(R.id.iv_sound_setting);
+
+        mSoundSetting.setSelected(!isNoSound);
 
         updateCurrentStep(getString(R.string.text_ready));
     }
@@ -90,6 +94,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ivNextTask.setOnClickListener(this);
         ivTaskList.setOnClickListener(this);
         btnStart.setOnClickListener(this);
+        mSoundSetting.setOnClickListener(this);
     }
 
     private void initBroadcastReceiver() {
@@ -138,6 +143,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.btn_start:
                 runPomodoroProcess();
+                break;
+            case R.id.iv_sound_setting:
+                isNoSound = !mSoundSetting.isSelected();
+                mSoundSetting.setSelected(isNoSound);
                 break;
         }
     }

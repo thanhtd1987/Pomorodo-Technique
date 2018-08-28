@@ -47,6 +47,15 @@
         android:paddingLeft="5dp"
         android:src="@drawable/ic_list_task" />
 
+    <ImageView
+        android:id="@+id/iv_sound_setting"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/select_sound_setting"
+        android:layout_below="@+id/et_task_name"
+        android:padding="5dp"
+        />
+
     <com.funwolrd.pomodorotechnique.common.views.CircleCountDownTimer
         android:id="@+id/circle_count_down_timer"
         android:layout_width="wrap_content"
