@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     //TODO : build function for settings: sound, vibrate, tea break's time ( quick / menu setting)
     //setting
-    private boolean isNoSound = true;
+    private boolean isNoSound = !true;
 
     private enum ProcessStatus {
         STARTED,
@@ -145,8 +145,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 runPomodoroProcess();
                 break;
             case R.id.iv_sound_setting:
-                isNoSound = !mSoundSetting.isSelected();
-                mSoundSetting.setSelected(isNoSound);
+                isNoSound = !isNoSound;
+                mSoundSetting.setSelected(!isNoSound);
                 break;
         }
     }
