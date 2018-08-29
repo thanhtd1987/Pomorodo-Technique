@@ -40,12 +40,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //setting
     private boolean isNoSound = !true;
 
-    private enum ProcessStatus {
-        STARTED,
-        STOPPED
-    }
 
-    private ProcessStatus mProcessStatus = ProcessStatus.STOPPED;
+
+    private PomorodoProcess.ProcessStatus mProcessStatus = PomorodoProcess.ProcessStatus.STOPPED;
     private Pomodoro mCurrentStep = Pomodoro.SHORT_BREAK;
     private int mPomodoroLapCount = 0;
     private boolean doubleBackToExit = false;
@@ -208,14 +205,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * method to start and stop count down timer
      */
     private void runPomodoroProcess() {
-        if (mProcessStatus == ProcessStatus.STOPPED) {
-            mProcessStatus = ProcessStatus.STARTED;
+        if (mProcessStatus == PomorodoProcess.ProcessStatus.STOPPED) {
+            mProcessStatus = PomorodoProcess.ProcessStatus.STARTED;
             doNextStep();
             mCountDownTimerView.startCountDown();
             mNotificationController.sendNotification();
             startService(new Intent(this, NotificationService.class).setAction(PomorodoReceiver.ACTION_START));
         } else {
-            mProcessStatus = ProcessStatus.STOPPED;
+            mProcessStatus = PomorodoProcess.ProcessStatus.STOPPED;
             mCountDownTimerView.stopCountDown();
             mNotificationController.cancelNotification();
         }

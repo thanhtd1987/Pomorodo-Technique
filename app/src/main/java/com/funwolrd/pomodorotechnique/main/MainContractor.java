@@ -1,5 +1,7 @@
 package com.funwolrd.pomodorotechnique.main;
 
+import android.content.Context;
+
 import com.funwolrd.pomodorotechnique.task.Task;
 
 /**
@@ -9,6 +11,7 @@ public interface MainContractor {
 
     interface View {
         Presenter getPresenter();
+        Context getContext();
         void onChangePomorodoProcess();
         void updateCurrentStep(String nextStep);
         void setCurrentTaskName(Task task);
@@ -17,7 +20,7 @@ public interface MainContractor {
     interface Presenter {
         View getView();
         void ringTheBell();
-        void getNextTask();
+        Task getNextTask();
         void runPomodoroProcess();
         void doNextStep();
     }
