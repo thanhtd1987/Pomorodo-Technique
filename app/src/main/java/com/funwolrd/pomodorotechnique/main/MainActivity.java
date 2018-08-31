@@ -4,8 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
@@ -25,12 +23,11 @@ import com.funwolrd.pomodorotechnique.notification.PomorodoReceiver;
 import com.funwolrd.pomodorotechnique.task.Task;
 import com.funwolrd.pomodorotechnique.task.TaskListDialog;
 
-import java.util.List;
-
-public class MainActivity extends AppCompatActivity implements View.OnClickListener,
+public class MainActivity extends AppCompatActivity implements MainContractor.View,
+        View.OnClickListener,
         CountDownTimerView.CountDownCallback {
 
-    private final int NOTIFICATION_ID = 111;
+//    private final int NOTIFICATION_ID = 111;
 
     //TODO : add UI for quick setting
 
@@ -42,9 +39,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
 
-    private PomorodoProcess.ProcessStatus mProcessStatus = PomorodoProcess.ProcessStatus.STOPPED;
-    private Pomodoro mCurrentStep = Pomodoro.SHORT_BREAK;
-    private int mPomodoroLapCount = 0;
+    private PomorodoProcess.Status mProcessStatus = PomorodoProcess.Status.STOPPED;
+    private Pomodoro mCurrentStep = Pomodoro.BREAK;
+
     private boolean doubleBackToExit = false;
 
     private EditText etTaskName;
@@ -55,8 +52,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private CountDownTimerView mCountDownTimerView;
     private ImageView mSoundSetting;
 
-    private NotificationController mNotificationController;
-    BroadcastReceiver receiver;
+//    private NotificationController mNotificationController;
+//    BroadcastReceiver receiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,8 +64,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         initViews();
         initListeners();
-        initBroadcastReceiver();
-        initNotificationController();
+//        initBroadcastReceiver();
+//        initNotificationController();
     }
 
     private void initViews() {
@@ -83,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         mSoundSetting.setSelected(!isNoSound);
 
-        updateCurrentStep(getString(R.string.text_ready));
+        updateStepInfo(getString(R.string.text_ready));
     }
 
     private void initListeners() {
@@ -94,33 +91,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mSoundSetting.setOnClickListener(this);
     }
 
-    private void initBroadcastReceiver() {
-        IntentFilter filter = new IntentFilter(PomorodoReceiver.ACTION_STOP);
-
-        receiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                switch (intent.getAction()) {
-                    case PomorodoReceiver.ACTION_STOP:
-                        processReceive();
-                        break;
-                    case PomorodoReceiver.ACTION_START:
-                        break;
-                }
-            }
-        };
-
-        registerReceiver(receiver, filter);
-    }
-
-    private void initNotificationController() {
-        mNotificationController = new NotificationController(this, NOTIFICATION_ID, etTaskName.getText().toString());
-    }
-
-    private void processReceive() {
-        mCountDownTimerView.stopCountDown();
-        mNotificationController.cancelNotification();
-    }
+//    private void initBroadcastReceiver() {
+//        IntentFilter filter = new IntentFilter(PomorodoReceiver.ACTION_STOP);
+//
+//        receiver = new BroadcastReceiver() {
+//            @Override
+//            public void onReceive(Context context, Intent intent) {
+//                switch (intent.getAction()) {
+//                    case PomorodoReceiver.ACTION_STOP:
+//                        processReceive();
+//                        break;
+//                    case PomorodoReceiver.ACTION_START:
+//                        break;
+//                }
+//            }
+//        };
+//
+//        registerReceiver(receiver, filter);
+//    }
+//
+//    private void initNotificationController() {
+//        mNotificationController = new NotificationController(this, NOTIFICATION_ID, etTaskName.getText().toString());
+//    }
+//
+//    private void processReceive() {
+//        mCountDownTimerView.stopCountDown();
+//        mNotificationController.cancelNotification();
+//    }
 
     /**
      * implemented method to listen clicks
@@ -131,15 +128,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.iv_next_task:
-                setCurrentTaskName(getNextTask());
+                updateTaskName(getPresenter().getNextTask(etTaskName.getText().toString()));
                 break;
             case R.id.iv_task_list:
                 new TaskListDialog(this)
-                        .setListener(task -> setCurrentTaskName(task))
+                        .setListener(task -> updateTaskName(task))
                         .show();
                 break;
             case R.id.btn_start:
-                runPomodoroProcess();
+                getPresenter().runPomodoroProcess();
                 break;
             case R.id.iv_sound_setting:
                 isNoSound = !isNoSound;
@@ -156,11 +153,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onDestroy() {
-        mNotificationController.cancelNotification();
+//        mNotificationController.cancelNotification();
         mCountDownTimerView.stopCountDown();
-        if (receiver != null)
-            unregisterReceiver(receiver);
-        stopService(new Intent(this, NotificationService.class));
+//        if (receiver != null)
+//            unregisterReceiver(receiver);
+//        stopService(new Intent(this, NotificationService.class));
         super.onDestroy();
     }
 
@@ -176,7 +173,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         new Handler().postDelayed(() -> doubleBackToExit = false, 2000);
     }
 
-    private void setCurrentTaskName(Task task) {
+    @Override
+    public void updateTaskName(Task task) {
         if (task == null) {
             etTaskName.setText(R.string.text_no_task);
         } else {
@@ -184,65 +182,84 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void updateCurrentStep(String nextStep) {
+    @Override
+    public MainContractor.Presenter getPresenter() {
+        return null;
+    }
+
+    @Override
+    public Context getContext() {
+        return this;
+    }
+
+    @Override
+    public void updateStepInfo(String nextStep) {
         tvCount.setText(String.format(getString(R.string.text_working_time), mPomodoroLapCount));
         tvNextStep.setText(String.format(getString(R.string.text_next_step), nextStep));
     }
 
-    private void onChangePomorodoProcess(boolean isStart) {
-        if (!isStart) {
-            mPomodoroLapCount = 0;
-            mCurrentStep = Pomodoro.SHORT_BREAK;
-            updateCurrentStep(getString(R.string.text_ready));
-        }
+    @Override
+    public void onStartProcess() {
+        updateProccesView(true);
+        mCountDownTimerView.startCountDown();
+    }
+
+    @Override
+    public void onStopProcess() {
+        mCurrentStep = Pomodoro.BREAK;
+        updateStepInfo(getString(R.string.text_ready));
+        updateProccesView(false);
+        mCountDownTimerView.stopCountDown();
+    }
+
+    private void updateProccesView(boolean isStart) {
         btnStart.setText(isStart ? getString(R.string.text_stop) : getString(R.string.text_start));
         btnStart.setSelected(isStart);
         btnStart.setTextColor(isStart ? getResources().getColor(R.color.colorYellow)
                 : getResources().getColor(R.color.colorPrimaryDark));
     }
-
     /**
      * method to start and stop count down timer
      */
-    private void runPomodoroProcess() {
-        if (mProcessStatus == PomorodoProcess.ProcessStatus.STOPPED) {
-            mProcessStatus = PomorodoProcess.ProcessStatus.STARTED;
-            doNextStep();
-            mCountDownTimerView.startCountDown();
-            mNotificationController.sendNotification();
-            startService(new Intent(this, NotificationService.class).setAction(PomorodoReceiver.ACTION_START));
-        } else {
-            mProcessStatus = PomorodoProcess.ProcessStatus.STOPPED;
-            mCountDownTimerView.stopCountDown();
-            mNotificationController.cancelNotification();
-        }
-    }
+//    private void runPomodoroProcess() {
+//        if (mProcessStatus == PomorodoProcess.Status.STOPPED) {
+//            mProcessStatus = PomorodoProcess.Status.STARTED;
+//            doNextStep();
+//            mCountDownTimerView.startCountDown();
+//            mNotificationController.sendNotification();
+//            startService(new Intent(this, NotificationService.class).setAction(PomorodoReceiver.ACTION_START));
+//        } else {
+//            mProcessStatus = PomorodoProcess.Status.STOPPED;
+//            mCountDownTimerView.stopCountDown();
+//            mNotificationController.cancelNotification();
+//        }
+//    }
 
     /**
      * method to start a timer for one step
      */
-    private void doNextStep() {
-        Pomodoro nextStep = Pomodoro.WORKING;
-        switch (mCurrentStep) {
-            case WORKING:
-                mCurrentStep = mPomodoroLapCount % 4 == 0 ? Pomodoro.TEA_BREAK : Pomodoro.SHORT_BREAK;
-                etTaskName.setEnabled(false);
-                break;
-            case SHORT_BREAK:
-            case TEA_BREAK:
-                mCurrentStep = Pomodoro.WORKING;
-                mPomodoroLapCount++;
-                nextStep = mPomodoroLapCount % 4 == 0 ? Pomodoro.TEA_BREAK : Pomodoro.SHORT_BREAK;
-                etTaskName.setEnabled(true);
-                break;
-        }
-        updateCurrentStep(nextStep.name());
-        mNotificationController.enableOnceTimeFunctions(true);
-        mCountDownTimerView.setTimerInSecond(mCurrentStep.value);
-        mCountDownTimerView.enableWarningOutOfRestTime(mCurrentStep != Pomodoro.WORKING);
-        mCountDownTimerView.startCountDown();
-        ringTheBell();
-    }
+//    private void doNextStep() {
+//        Pomodoro nextStep = Pomodoro.WORKING;
+//        switch (mCurrentStep) {
+//            case WORKING:
+//                mCurrentStep = mPomodoroLapCount % 4 == 0 ? Pomodoro.LONG_BREAK : Pomodoro.BREAK;
+//                etTaskName.setEnabled(false);
+//                break;
+//            case BREAK:
+//            case LONG_BREAK:
+//                mCurrentStep = Pomodoro.WORKING;
+//                mPomodoroLapCount++;
+//                nextStep = mPomodoroLapCount % 4 == 0 ? Pomodoro.LONG_BREAK : Pomodoro.BREAK;
+//                etTaskName.setEnabled(true);
+//                break;
+//        }
+//        updateStepInfo(nextStep.name());
+//        mNotificationController.enableOnceTimeFunctions(true);
+//        mCountDownTimerView.setTimerInSecond(mCurrentStep.value);
+//        mCountDownTimerView.enableWarningOutOfRestTime(mCurrentStep != Pomodoro.WORKING);
+//        mCountDownTimerView.startCountDown();
+//        getPresenter().ringTheBell();
+//    }
 
     @Override
     public void onStartCountDown() {
@@ -256,7 +273,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onFinishCountDown() {
-        doNextStep();
+        getPresenter().doNextStep();
     }
 
     @Override
@@ -269,36 +286,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     /**
      * notify start - end of step by sound
      */
-    private void ringTheBell() {
-        if (!isNoSound) {
-            MediaPlayer mp = MediaPlayer.create(this, mCurrentStep == Pomodoro.WORKING ? R.raw.sound_working : R.raw.sound_rest);
-            mp.setOnCompletionListener(mediaPlayer -> mp.release());
-            mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            mp.start();
-        }
-    }
+//    private void ringTheBell() {
+//        if (!isNoSound) {
+//            MediaPlayer mp = MediaPlayer.create(this, mCurrentStep == Pomodoro.WORKING ? R.raw.sound_working : R.raw.sound_rest);
+//            mp.setOnCompletionListener(mediaPlayer -> mp.release());
+//            mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
+//            mp.start();
+//        }
+//    }
 
-    private Task getNextTask() {
-        List<Task> tasks = Task.getSavedTasks(this);
-        for (Task task : tasks) {
-            if (task.isOnDoing()) {
-                if (etTaskName.getText().toString().equals(getString(R.string.text_no_task)))
-                    return task;
-                task.setDone(true);
-                task.setOnDoing(false);
-                break;
-            }
-        }
-        for (Task task : tasks) {
-            if (!task.isDone()) {
-                task.setOnDoing(true);
-                Task.saveTaskList(this, tasks);
-                return task;
-            }
-        }
-        Task.saveTaskList(this, tasks);
-        return null;
-    }
+//    private Task getNextTask() {
+//        List<Task> tasks = Task.getSavedTasks(this);
+//        for (Task task : tasks) {
+//            if (task.isOnDoing()) {
+//                if (etTaskName.getText().toString().equals(getString(R.string.text_no_task)))
+//                    return task;
+//                task.setDone(true);
+//                task.setOnDoing(false);
+//                break;
+//            }
+//        }
+//        for (Task task : tasks) {
+//            if (!task.isDone()) {
+//                task.setOnDoing(true);
+//                Task.saveTaskList(this, tasks);
+//                return task;
+//            }
+//        }
+//        Task.saveTaskList(this, tasks);
+//        return null;
+//    }
 
     //TODO : separate Push notification to other file
 

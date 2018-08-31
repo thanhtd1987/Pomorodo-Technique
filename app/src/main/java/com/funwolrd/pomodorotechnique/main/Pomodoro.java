@@ -6,11 +6,11 @@ package com.funwolrd.pomodorotechnique.main;
 public enum Pomodoro {
 
     WORKING(25),
-    SHORT_BREAK(5),
-    TEA_BREAK(15);
+    BREAK(5),
+    LONG_BREAK(15);
 
     public int value;
-    private boolean debug = true;
+    private boolean debug = false;
 
     Pomodoro(int value) {
         if (debug)

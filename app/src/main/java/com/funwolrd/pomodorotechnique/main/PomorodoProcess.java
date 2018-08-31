@@ -5,7 +5,7 @@ package com.funwolrd.pomodorotechnique.main;
  */
 public class PomorodoProcess {
 
-    public enum ProcessStatus {
+    public enum Status {
         STARTED,
         STOPPED
     }
@@ -19,7 +19,7 @@ public class PomorodoProcess {
     }
 
     interface Callback {
-        void onStatusChange(ProcessStatus status);
+        void onStatusChange(Status status);
         void onStartWorking();
         void onBreak();
         void onLongBreak();

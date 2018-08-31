@@ -6,8 +6,6 @@ import com.funwolrd.pomodorotechnique.common.Utils;
 import com.funwolrd.pomodorotechnique.common.managers.PreferenceManager;
 import com.funwolrd.pomodorotechnique.main.Pomodoro;
 
-import java.util.Set;
-
 /**
  * Created by ThanhTD on 7/26/2018.
  */
@@ -19,7 +17,7 @@ public class Setting {
 
     boolean isNoSound = false;
     boolean isVibrate = true;
-    int teaBreakTime = Pomodoro.TEA_BREAK.value;
+    int longBreakTime = Pomodoro.LONG_BREAK.value;
 
     private static Setting sSetting;
 
@@ -48,16 +46,16 @@ public class Setting {
         sSetting.isVibrate = vibrate;
     }
 
-    public int getTeaBreakTime() {
-        return sSetting.teaBreakTime;
+    public int getLongBreakTime() {
+        return sSetting.longBreakTime;
     }
 
-    public void setTeaBreakTime(int teaBreakTime) {
-        sSetting.teaBreakTime = teaBreakTime * SECOND_IN_MINUTE;
+    public void setLongBreakTime(int longBreakTime) {
+        sSetting.longBreakTime = longBreakTime * SECOND_IN_MINUTE;
     }
 
     public int getSelectedTeaBreakTime() {
-        return sSetting.teaBreakTime / 1000;
+        return sSetting.longBreakTime / 1000;
     }
 
     private void updateSetting(Context context) {

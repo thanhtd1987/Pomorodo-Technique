@@ -12,16 +12,18 @@ public interface MainContractor {
     interface View {
         Presenter getPresenter();
         Context getContext();
-        void onChangePomorodoProcess();
-        void updateCurrentStep(String nextStep);
-        void setCurrentTaskName(Task task);
+        void onStartProcess();
+        void onStopProcess();
+        void updateStepInfo(String nextStep);
+        void updateTaskName(Task task);
     }
 
     interface Presenter {
         View getView();
         void ringTheBell();
-        Task getNextTask();
+        Task getNextTask(String currentTask);
         void runPomodoroProcess();
         void doNextStep();
+        void destroyServices();
     }
 }
